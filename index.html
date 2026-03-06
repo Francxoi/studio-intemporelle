@@ -582,7 +582,14 @@ tbody td.name{color:var(--text);font-weight:400;}
       </div>
 
       <div class="section-title">Derniers clients ajoutés <span>ACTIVITÉ RÉCENTE</span></div>
-      <div class="table-wrap" id="dashRecentTable">
+      <div id="dashRecentTable"></div>
+      <div style="margin-top:24px;padding:14px 18px;background:rgba(192,57,43,0.06);border:1px solid rgba(192,57,43,0.15);border-radius:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+        <div>
+          <div style="font-size:12px;font-weight:500;color:#e74c3c;margin-bottom:2px;">🧹 Données de démonstration</div>
+          <div style="font-size:11px;color:var(--text3);">Supprimez les 3 clients fictifs (Camille, Lucas, Sofia) pour démarrer avec vos vrais clients.</div>
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="resetDemoData()">Vider les données démo</button>
+      </div>
         <table>
           <thead><tr><th>Client</th><th>Statut</th><th>Date création</th><th>Soins</th><th></th></tr></thead>
           <tbody id="dashRecentBody"></tbody>
@@ -1513,6 +1520,7 @@ function renderClients(){
       <td>
         <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openFicheClient('${c.id}')">Ouvrir</button>
         <button class="btn btn-danger btn-sm" style="margin-left:4px;" onclick="event.stopPropagation();archiveClient('${c.id}')">Archiver</button>
+        <button class="btn btn-danger btn-sm" style="margin-left:4px;opacity:0.7;" onclick="event.stopPropagation();deleteClient('${c.id}')">🗑️</button>
       </td>
     </tr>`;
   }).join('');
@@ -1546,6 +1554,7 @@ function renderArchives(){
       <td>
         <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();restoreClient('${c.id}')">Restaurer</button>
         <button class="btn btn-ghost btn-sm" style="margin-left:4px;" onclick="event.stopPropagation();openFicheClient('${c.id}')">Voir</button>
+        <button class="btn btn-danger btn-sm" style="margin-left:4px;opacity:0.7;" onclick="event.stopPropagation();deleteClient('${c.id}')">🗑️ Supprimer</button>
       </td>
     </tr>`;
   }).join('');
@@ -1555,6 +1564,70 @@ function restoreClient(id){
   if(!c) return;
   c.statut = 'actif'; delete c.dateArchive;
   saveDB(); renderArchives(); updateStats(); toast('Dossier restauré ✓');
+}
+
+// ═══════════════════════════════════════════
+// SUPPRESSIONS
+// ═══════════════════════════════════════════
+function deleteClient(id){
+  const c = DB.clients.find(x=>x.id===id);
+  if(!c) return;
+  if(!confirm(`⚠️ Supprimer DÉFINITIVEMENT le dossier de ${c.prenom} ${c.nom} ?\n\nToutes ses fiches de soins, questionnaires et autorisations seront également supprimés.\n\nCette action est irréversible.`)) return;
+  DB.clients = DB.clients.filter(x=>x.id!==id);
+  DB.soins = DB.soins.filter(x=>x.clientId!==id);
+  DB.questionnaires = DB.questionnaires.filter(x=>x.clientId!==id);
+  DB.autorisations = DB.autorisations.filter(x=>x.clientId!==id);
+  saveDB(); updateStats();
+  if(currentView==='archives') renderArchives();
+  else renderClients();
+  toast('Dossier supprimé définitivement');
+}
+
+function deleteSoin(id){
+  const s = DB.soins.find(x=>x.id===id);
+  if(!s) return;
+  const c = DB.clients.find(x=>x.id===s.clientId);
+  const nom = c ? `${c.prenom} ${c.nom}` : 'ce client';
+  if(!confirm(`Supprimer cette fiche de soin (${soinLabels[s.type]||s.type} — ${s.zone}) pour ${nom} ?`)) return;
+  DB.soins = DB.soins.filter(x=>x.id!==id);
+  saveDB(); updateStats();
+  if(currentView==='soins') renderSoins();
+  toast('Fiche de soin supprimée ✓');
+}
+
+function deleteQuestionnaire(id){
+  const q = DB.questionnaires.find(x=>x.id===id);
+  if(!q) return;
+  const c = DB.clients.find(x=>x.id===q.clientId);
+  const nom = c ? `${c.prenom} ${c.nom}` : 'ce client';
+  if(!confirm(`Supprimer le questionnaire ${q.type} de ${nom} ?`)) return;
+  DB.questionnaires = DB.questionnaires.filter(x=>x.id!==id);
+  saveDB();
+  if(currentView==='questionnaires') renderQuestionnaires();
+  toast('Questionnaire supprimé ✓');
+}
+
+function deleteAutorisation(id){
+  const a = DB.autorisations.find(x=>x.id===id);
+  if(!a) return;
+  const c = DB.clients.find(x=>x.id===a.clientId);
+  const nom = c ? `${c.prenom} ${c.nom}` : 'ce client';
+  if(!confirm(`Supprimer l'autorisation de ${nom} ?`)) return;
+  DB.autorisations = DB.autorisations.filter(x=>x.id!==id);
+  saveDB();
+  if(currentView==='autorisations') renderAutorisations();
+  toast('Autorisation supprimée ✓');
+}
+
+function resetDemoData(){
+  if(!confirm('⚠️ Vider toutes les données de démonstration ?\n\nLes 3 clients fictifs (Camille, Lucas, Sofia) et leurs fiches seront supprimés.\n\nVos vraies données ne seront pas affectées.')) return;
+  DB.clients = DB.clients.filter(c=>!c.id.startsWith('CLI-DEMO'));
+  DB.soins = DB.soins.filter(s=>!s.id.startsWith('S-DEMO'));
+  DB.questionnaires = DB.questionnaires.filter(q=>!q.id.startsWith('Q-DEMO'));
+  DB.autorisations = DB.autorisations.filter(a=>!a.id.startsWith('A-DEMO'));
+  saveDB(); updateStats(); renderDashboard();
+  showView('dashboard', document.querySelector('.nav-item'));
+  toast('✓ Données de démo supprimées — prêt pour vos vrais clients !');
 }
 
 // ═══════════════════════════════════════════
@@ -1578,7 +1651,10 @@ function renderQuestionnaires(){
       <td>${formatDate(q.date)}</td>
       <td style="color:var(--text3);font-size:12px;">${allergiesStr}</td>
       <td><span class="badge badge-active">✓ Signé</span></td>
-      <td><button class="btn btn-ghost btn-sm" onclick="openFicheClient('${q.clientId}')">Voir fiche</button></td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="openFicheClient('${q.clientId}')">Voir fiche</button>
+        <button class="btn btn-danger btn-sm" style="margin-left:4px;opacity:0.7;" onclick="deleteQuestionnaire('${q.id}')">🗑️</button>
+      </td>
     </tr>`;
   }).join('');
 }
@@ -1601,7 +1677,10 @@ function renderAutorisations(){
       <td>${typeLabel}</td>
       <td>${formatDate(a.date)}</td>
       <td><span class="badge ${a.signature?'badge-active':'badge-archive'}">${a.signature?'Signé':'Non signé'}</span></td>
-      <td><button class="btn btn-ghost btn-sm" onclick="openFicheClient('${a.clientId}')">Voir fiche</button></td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="openFicheClient('${a.clientId}')">Voir fiche</button>
+        <button class="btn btn-danger btn-sm" style="margin-left:4px;opacity:0.7;" onclick="deleteAutorisation('${a.id}')">🗑️</button>
+      </td>
     </tr>`;
   }).join('');
 }
@@ -1782,7 +1861,10 @@ function renderSoins(){
       <td style="color:var(--text3)">${s.zone}</td>
       <td>${formatDate(s.date)}</td>
       <td>${totalPh?`<span class="badge badge-soin">📸 ${totalPh}</span>`:'—'}</td>
-      <td><button class="btn btn-ghost btn-sm" onclick="openFicheClient('${s.clientId}')">Voir fiche</button></td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="openFicheClient('${s.clientId}')">Voir fiche</button>
+        <button class="btn btn-danger btn-sm" style="margin-left:4px;opacity:0.7;" onclick="deleteSoin('${s.id}')">🗑️</button>
+      </td>
     </tr>`;
   }).join('');
 }
@@ -1809,7 +1891,10 @@ function openFicheClient(id){
       <div class="record-content">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
           <div class="record-title">${soinIcons[s.type]||'🩺'} ${soinLabels[s.type]||s.type} — ${s.zone}</div>
-          <button class="print-btn print-btn-blue" onclick="printSoin('${s.id}')">🖨️ Imprimer</button>
+          <div style="display:flex;gap:6px;">
+            <button class="print-btn print-btn-blue" onclick="printSoin('${s.id}')">🖨️ Imprimer</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteSoin('${s.id}');openFicheClient('${id}')">🗑️</button>
+          </div>
         </div>
         <div class="record-meta">📅 ${formatDate(s.date)} · ${s.bijou||''} ${s.calibre?s.calibre+'mm':''} · ${s.materiau||''} · ${s.deroulement||''}</div>
         ${phHtml?`<div class="record-photos">${phHtml}</div>`:''}
@@ -1825,7 +1910,10 @@ function openFicheClient(id){
       <div class="record-content">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
           <div class="record-title">Questionnaire ${q.type==='mineur'?'Mineur':'Majeur'}</div>
-          <button class="print-btn print-btn-blue" onclick="printQuestionnaire('${q.id}')">🖨️ Imprimer</button>
+          <div style="display:flex;gap:6px;">
+            <button class="print-btn print-btn-blue" onclick="printQuestionnaire('${q.id}')">🖨️ Imprimer</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteQuestionnaire('${q.id}');openFicheClient('${id}')">🗑️</button>
+          </div>
         </div>
         <div class="record-meta">📅 ${formatDate(q.date)} · Zone : ${q.zone||'—'} · Allergies : ${(q.allergies&&q.allergies.length)?q.allergies.join(', '):'Aucune'}</div>
         ${q.infos?`<div style="font-size:11px;color:var(--text3);margin-top:4px;">📝 ${q.infos}</div>`:''}
