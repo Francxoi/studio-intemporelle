@@ -540,6 +540,9 @@ tbody td.name{color:var(--text);font-weight:400;}
     <div class="nav-item" onclick="showView('impression',this)">
       <span class="nav-icon">🖨️</span><span>Impression</span>
     </div>
+    <div class="nav-item" onclick="showView('sauvegarde',this)">
+      <span class="nav-icon">💾</span><span>Sauvegarde</span>
+    </div>
   </nav>
 </aside>
 
@@ -879,6 +882,59 @@ tbody td.name{color:var(--text);font-weight:400;}
           </div>
         </div>
         <div id="impClientDocs"></div>
+      </div>
+
+    </div>
+
+    <!-- ── SAUVEGARDE ── -->
+    <div class="view" id="view-sauvegarde">
+
+      <!-- EXPORT -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+          <div style="font-size:32px;">📤</div>
+          <div>
+            <div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:4px;">Exporter mes données</div>
+            <div style="font-size:12px;color:var(--text3);">Télécharge un fichier de sauvegarde complet (clients, soins, questionnaires, autorisations)</div>
+          </div>
+        </div>
+        <div id="exportStats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;"></div>
+        <button class="btn btn-gold" onclick="exportData()">📤 Télécharger la sauvegarde</button>
+        <div style="font-size:11px;color:var(--text3);margin-top:10px;">💡 Le fichier s'appelle <strong>studio-backup-[date].json</strong> — gardez-le précieusement !</div>
+      </div>
+
+      <!-- IMPORT -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+          <div style="font-size:32px;">📥</div>
+          <div>
+            <div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:4px;">Importer une sauvegarde</div>
+            <div style="font-size:12px;color:var(--text3);">Restaurez vos données depuis un fichier de sauvegarde précédent</div>
+          </div>
+        </div>
+        <div style="background:rgba(192,57,43,0.06);border:1px solid rgba(192,57,43,0.2);border-radius:8px;padding:12px;margin-bottom:14px;font-size:12px;color:#e74c3c;">
+          ⚠️ L'import <strong>remplace toutes les données actuelles</strong>. Faites d'abord un export si nécessaire.
+        </div>
+        <label style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:rgba(200,169,110,0.1);border:1px solid rgba(200,169,110,0.25);border-radius:8px;cursor:pointer;color:var(--gold);font-size:13px;">
+          📥 Choisir un fichier de sauvegarde
+          <input type="file" accept=".json" onchange="importData(this)" style="display:none;">
+        </label>
+        <div id="importResult" style="margin-top:12px;font-size:12px;"></div>
+      </div>
+
+      <!-- DANGER ZONE -->
+      <div style="background:rgba(192,57,43,0.04);border:1px solid rgba(192,57,43,0.15);border-radius:12px;padding:24px;">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+          <div style="font-size:32px;">🗑️</div>
+          <div>
+            <div style="font-size:15px;font-weight:500;color:#e74c3c;margin-bottom:4px;">Zone dangereuse</div>
+            <div style="font-size:12px;color:var(--text3);">Actions irréversibles — exportez d'abord vos données !</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-danger btn-sm" onclick="resetDemoData()">🧹 Vider données démo</button>
+          <button class="btn btn-danger btn-sm" onclick="clearAllData()">💣 Effacer TOUTES les données</button>
+        </div>
       </div>
 
     </div>
@@ -1484,7 +1540,7 @@ function showView(name, el){
     dashboard:'Tableau de bord', clients:'Clients', archives:'Archives',
     questionnaires:'Questionnaires médicaux', autorisations:'Autorisations & Confidentialité',
     soins:'Fiches de soins', ficheClient:'Fiche client',
-    jotform:'Formulaires JotForm', impression:'Impression & PDF'
+    jotform:'Formulaires JotForm', impression:'Impression & PDF', sauvegarde:'Sauvegarde & Restauration'
   };
   document.getElementById('topbarTitle').textContent = titles[name]||name;
   // FAB visibility
@@ -1513,7 +1569,7 @@ function refreshView(name){
     case 'questionnaires': renderQuestionnaires(); break;
     case 'autorisations': renderAutorisations(); break;
     case 'soins': renderSoins(); break;
-    case 'impression': setImpMode('vierge'); break;
+    case 'sauvegarde': renderSauvegarde(); break;
   }
   updateStats();
 }
@@ -2919,6 +2975,88 @@ function printTout(){
     if(i < types.length-1) html += '<div style="page-break-after:always;"></div>';
   });
   doPrint(html);
+}
+
+// ═══════════════════════════════════════════
+// SAUVEGARDE & RESTAURATION
+// ═══════════════════════════════════════════
+function renderSauvegarde(){
+  const div = document.getElementById('exportStats');
+  if(!div) return;
+  const stats = [
+    {icon:'👥', label:'Clients', val: DB.clients.filter(c=>c.statut!=='archive').length},
+    {icon:'📦', label:'Archives', val: DB.clients.filter(c=>c.statut==='archive').length},
+    {icon:'🩺', label:'Soins', val: DB.soins.length},
+    {icon:'📋', label:'Documents', val: DB.questionnaires.length + DB.autorisations.length},
+  ];
+  div.innerHTML = stats.map(s=>`
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
+      <div style="font-size:22px;">${s.icon}</div>
+      <div style="font-size:20px;font-weight:600;color:var(--gold);">${s.val}</div>
+      <div style="font-size:11px;color:var(--text3);">${s.label}</div>
+    </div>
+  `).join('');
+}
+
+function exportData(){
+  const backup = {
+    version: '1.0',
+    date: new Date().toISOString(),
+    app: 'Studio — Gestion Clients & Soins',
+    data: {
+      clients: DB.clients,
+      soins: DB.soins,
+      questionnaires: DB.questionnaires,
+      autorisations: DB.autorisations
+    }
+  };
+  const json = JSON.stringify(backup, null, 2);
+  const blob = new Blob([json], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const dateStr = new Date().toISOString().split('T')[0];
+  a.href = url;
+  a.download = `studio-backup-${dateStr}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('✅ Sauvegarde téléchargée — gardez ce fichier précieusement !');
+}
+
+function importData(input){
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try {
+      const backup = JSON.parse(e.target.result);
+      if(!backup.data || !backup.data.clients){
+        document.getElementById('importResult').innerHTML = '<span style="color:#e74c3c;">❌ Fichier invalide — ce n\'est pas une sauvegarde Studio.</span>';
+        return;
+      }
+      const d = backup.data;
+      const nb = d.clients.length;
+      if(!confirm(`Importer ${nb} client(s) et toutes leurs données ?\n\nDate de la sauvegarde : ${new Date(backup.date).toLocaleDateString('fr-FR')}\n\n⚠️ Vos données actuelles seront remplacées.`)) return;
+      DB.clients = d.clients || [];
+      DB.soins = d.soins || [];
+      DB.questionnaires = d.questionnaires || [];
+      DB.autorisations = d.autorisations || [];
+      saveDB(); updateStats(); renderDashboard();
+      document.getElementById('importResult').innerHTML = `<span style="color:#58d68d;">✅ Import réussi — ${nb} client(s) restauré(s) · ${DB.soins.length} soin(s) · ${DB.questionnaires.length} questionnaire(s)</span>`;
+      renderSauvegarde();
+      toast(`✅ ${nb} client(s) importé(s) avec succès !`);
+    } catch(err) {
+      document.getElementById('importResult').innerHTML = '<span style="color:#e74c3c;">❌ Erreur de lecture — fichier corrompu ou invalide.</span>';
+    }
+  };
+  reader.readAsText(file);
+}
+
+function clearAllData(){
+  if(!confirm('💣 ATTENTION — Effacer TOUTES les données ?\n\nClients, soins, questionnaires, autorisations — tout sera supprimé.\n\nCette action est IRRÉVERSIBLE.\n\nAvez-vous bien exporté une sauvegarde ?')) return;
+  if(!confirm('Dernière confirmation — êtes-vous absolument sûr(e) ?')) return;
+  DB.clients = []; DB.soins = []; DB.questionnaires = []; DB.autorisations = [];
+  saveDB(); updateStats(); renderDashboard(); renderSauvegarde();
+  toast('Toutes les données ont été effacées');
 }
 
 function openJotformEmbed(url, titre){
