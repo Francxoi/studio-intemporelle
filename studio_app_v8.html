@@ -1,0 +1,2643 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Studio — Gestion Clients & Soins</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Jost:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080808;
+  --surface: #111111;
+  --surface2: #181818;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --gold: #c8a96e;
+  --gold2: #e8d5a3;
+  --gold-dim: rgba(200,169,110,0.15);
+  --text: #e8e0d4;
+  --text2: rgba(232,224,212,0.55);
+  --text3: rgba(232,224,212,0.3);
+  --red: #c0392b;
+  --red-dim: rgba(192,57,43,0.15);
+  --green: #27ae60;
+  --green-dim: rgba(39,174,96,0.12);
+  --blue: #2471a3;
+  --blue-dim: rgba(36,113,163,0.12);
+  --radius: 12px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Jost',sans-serif;
+  font-weight:300;
+  font-size:14px;
+}
+
+/* ── LAYOUT ── */
+.app{display:flex;height:100vh;overflow:hidden;}
+
+/* SIDEBAR */
+.sidebar{
+  width:220px;flex-shrink:0;
+  background:var(--surface);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  padding:0 0 16px;
+  overflow:hidden;
+  transition:width 0.3s;
+}
+.sidebar.collapsed{width:56px;}
+.logo{
+  padding:22px 18px 18px;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.logo-mark{
+  font-family:'Cormorant Garamond',serif;
+  font-size:22px;font-weight:700;
+  color:var(--gold);
+  letter-spacing:2px;
+  white-space:nowrap;
+  overflow:hidden;
+}
+.logo-sub{
+  font-size:9px;letter-spacing:3px;text-transform:uppercase;
+  color:var(--text3);margin-top:3px;
+  white-space:nowrap;overflow:hidden;
+}
+.nav{flex:1;overflow-y:auto;padding:10px 8px;scrollbar-width:none;}
+.nav::-webkit-scrollbar{display:none;}
+.nav-section-label{
+  font-size:9px;letter-spacing:2.5px;text-transform:uppercase;
+  color:var(--text3);padding:10px 10px 5px;
+  white-space:nowrap;overflow:hidden;
+}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 10px;border-radius:8px;
+  cursor:pointer;transition:all 0.18s;
+  color:var(--text2);font-size:13px;font-weight:300;
+  white-space:nowrap;overflow:hidden;
+  margin-bottom:2px;
+  border:1px solid transparent;
+}
+.nav-item:hover{background:rgba(255,255,255,0.04);color:var(--text);}
+.nav-item.active{
+  background:var(--gold-dim);
+  border-color:rgba(200,169,110,0.25);
+  color:var(--gold);font-weight:500;
+}
+.nav-icon{font-size:16px;flex-shrink:0;width:20px;text-align:center;}
+.nav-badge{
+  margin-left:auto;background:var(--gold);color:var(--bg);
+  font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;flex-shrink:0;
+}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);}
+.topbar{
+  height:60px;flex-shrink:0;
+  display:flex;align-items:center;
+  padding:0 20px;
+  border-bottom:1px solid var(--border);
+  background:var(--surface);
+  gap:12px;
+}
+.topbar-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:19px;font-weight:600;
+  color:var(--gold2);letter-spacing:0.5px;
+  flex-shrink:0;
+  min-width:0;
+}
+.search-wrap{
+  flex:1;min-width:0;max-width:280px;
+  display:flex;align-items:center;gap:8px;
+  background:var(--surface2);
+  border:1px solid var(--border2);
+  border-radius:8px;padding:0 12px;height:34px;
+}
+.search-wrap input{
+  background:transparent;border:none;outline:none;
+  color:var(--text);font-family:'Jost',sans-serif;font-size:13px;
+  width:100%;min-width:0;
+}
+.search-wrap input::placeholder{color:var(--text3);}
+/* FAB bouton flottant */
+.fab{
+  position:fixed;bottom:28px;right:28px;
+  background:var(--gold);color:#0a0806;
+  border:none;border-radius:50px;
+  padding:13px 22px;
+  font-family:'Jost',sans-serif;font-size:14px;font-weight:700;
+  cursor:pointer;z-index:500;
+  box-shadow:0 4px 24px rgba(200,169,110,0.35);
+  display:flex;align-items:center;gap:8px;
+  transition:all 0.2s;
+}
+.fab:hover{background:var(--gold2);transform:translateY(-2px);box-shadow:0 6px 30px rgba(200,169,110,0.45);}
+.fab:active{transform:translateY(0);}
+@media(max-width:768px){.fab{bottom:20px;right:16px;padding:12px 18px;font-size:13px;}}
+.btn{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:7px 16px;border-radius:8px;
+  border:none;cursor:pointer;
+  font-family:'Jost',sans-serif;font-size:13px;font-weight:500;
+  transition:all 0.18s;white-space:nowrap;
+}
+.btn-gold{background:var(--gold);color:#0a0806;}
+.btn-gold:hover{background:var(--gold2);}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2);}
+.btn-ghost:hover{background:rgba(255,255,255,0.04);color:var(--text);}
+.btn-danger{background:var(--red-dim);color:#e74c3c;border:1px solid rgba(192,57,43,0.2);}
+.btn-danger:hover{background:rgba(192,57,43,0.25);}
+.btn-sm{padding:5px 12px;font-size:12px;}
+
+/* CONTENT */
+.content{flex:1;overflow-y:auto;padding:24px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.08) transparent;}
+.content::-webkit-scrollbar{width:4px;}
+.content::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:4px;}
+
+/* VIEWS */
+.view{display:none;}
+.view.active{display:block;}
+
+/* DASHBOARD */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+.stat-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:18px 20px;
+}
+.stat-card .label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;}
+.stat-card .value{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:600;color:var(--gold);line-height:1;}
+.stat-card .sub{font-size:11px;color:var(--text3);margin-top:5px;}
+
+.section-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:18px;font-weight:600;color:var(--gold2);
+  margin-bottom:14px;display:flex;align-items:center;gap:10px;
+}
+.section-title span{font-family:'Jost',sans-serif;font-size:11px;font-weight:400;color:var(--text3);letter-spacing:1px;}
+
+/* TABLE */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:24px;}
+table{width:100%;border-collapse:collapse;}
+thead th{
+  padding:11px 16px;text-align:left;
+  font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--text3);font-weight:500;
+  border-bottom:1px solid var(--border);
+  background:rgba(0,0,0,0.2);
+}
+tbody tr{border-bottom:1px solid var(--border);transition:background 0.15s;cursor:pointer;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:rgba(255,255,255,0.025);}
+tbody td{padding:12px 16px;font-size:13px;color:var(--text2);}
+tbody td.name{color:var(--text);font-weight:400;}
+.avatar{
+  width:30px;height:30px;border-radius:50%;
+  background:var(--gold-dim);border:1px solid rgba(200,169,110,0.2);
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:600;color:var(--gold);
+  flex-shrink:0;
+}
+.avatar img{width:100%;height:100%;border-radius:50%;object-fit:cover;}
+.td-flex{display:flex;align-items:center;gap:10px;}
+.badge{
+  display:inline-flex;align-items:center;
+  font-size:10px;font-weight:600;letter-spacing:0.5px;
+  padding:3px 9px;border-radius:20px;
+}
+.badge-active{background:var(--green-dim);color:#58d68d;border:1px solid rgba(39,174,96,0.2);}
+.badge-archive{background:rgba(100,100,100,0.1);color:rgba(255,255,255,0.3);border:1px solid rgba(255,255,255,0.07);}
+.badge-minor{background:rgba(231,76,60,0.12);color:#e74c3c;border:1px solid rgba(231,76,60,0.2);}
+.badge-major{background:var(--blue-dim);color:#5dade2;border:1px solid rgba(36,113,163,0.2);}
+.badge-soin{background:var(--gold-dim);color:var(--gold);border:1px solid rgba(200,169,110,0.2);}
+
+/* MODAL */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.82);
+  z-index:1000;display:none;align-items:center;justify-content:center;
+  padding:16px;
+  backdrop-filter:blur(4px);
+}
+.modal-overlay.open{display:flex;}
+.modal{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:16px;width:100%;max-width:680px;
+  max-height:90vh;overflow:hidden;
+  display:flex;flex-direction:column;
+  animation:modalIn 0.25s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes modalIn{from{opacity:0;transform:scale(0.92) translateY(20px);}to{opacity:1;transform:scale(1) translateY(0);}}
+.modal-header{
+  padding:20px 24px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+}
+.modal-header h2{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--gold2);}
+.modal-close{
+  background:rgba(255,255,255,0.05);border:1px solid var(--border2);
+  border-radius:6px;padding:6px 10px;cursor:pointer;
+  color:var(--text2);font-size:14px;transition:all 0.15s;
+}
+.modal-close:hover{background:rgba(255,255,255,0.1);color:var(--text);}
+.modal-body{padding:24px;overflow-y:auto;flex:1;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.08) transparent;}
+.modal-footer{
+  padding:16px 24px;border-top:1px solid var(--border);
+  display:flex;justify-content:flex-end;gap:10px;flex-shrink:0;
+}
+
+/* FORM */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.form-row.full{grid-template-columns:1fr;}
+.form-row.three{grid-template-columns:1fr 1fr 1fr;}
+.form-group{display:flex;flex-direction:column;gap:6px;}
+.form-group label{font-size:10px;letter-spacing:1.8px;text-transform:uppercase;color:var(--text3);font-weight:500;}
+.form-group input,
+.form-group select,
+.form-group textarea{
+  background:var(--surface2);
+  border:1px solid var(--border2);
+  border-radius:8px;padding:9px 12px;
+  color:var(--text);font-family:'Jost',sans-serif;font-size:13px;font-weight:300;
+  outline:none;transition:border-color 0.15s;
+  width:100%;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus{border-color:rgba(200,169,110,0.4);}
+.form-group textarea{resize:vertical;min-height:80px;}
+.form-group select option{background:#222;}
+.form-section-divider{
+  font-size:10px;letter-spacing:2.5px;text-transform:uppercase;
+  color:rgba(200,169,110,0.5);padding:14px 0 10px;
+  border-bottom:1px solid rgba(200,169,110,0.1);margin-bottom:14px;
+}
+
+/* PHOTO UPLOAD */
+.photo-upload{
+  border:2px dashed var(--border2);border-radius:10px;
+  padding:24px;text-align:center;cursor:pointer;
+  transition:all 0.2s;background:var(--surface2);
+  position:relative;overflow:hidden;
+}
+.photo-upload:hover{border-color:rgba(200,169,110,0.4);background:rgba(200,169,110,0.03);}
+.photo-upload input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;z-index:2;}
+.photo-upload .icon{font-size:28px;margin-bottom:8px;}
+.photo-upload p{font-size:12px;color:var(--text3);}
+.photo-upload p strong{color:var(--gold);font-weight:500;}
+.photo-preview{
+  display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;
+}
+.photo-thumb{
+  width:72px;height:72px;border-radius:8px;
+  object-fit:cover;border:1px solid var(--border2);
+  cursor:pointer;transition:transform 0.15s;
+}
+.photo-thumb:hover{transform:scale(1.05);}
+
+/* SIGNATURE */
+.sig-pad{
+  border:1px solid var(--border2);border-radius:10px;
+  background:var(--surface2);cursor:crosshair;
+  display:block;width:100%;height:140px;touch-action:none;
+}
+
+/* FICHE CLIENT VIEW */
+.client-header{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:24px;
+  display:flex;align-items:flex-start;gap:20px;margin-bottom:20px;
+}
+.client-avatar-lg{
+  width:72px;height:72px;border-radius:50%;
+  border:2px solid rgba(200,169,110,0.3);
+  object-fit:cover;flex-shrink:0;
+  background:var(--gold-dim);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--gold);
+  overflow:hidden;
+}
+.client-avatar-lg img{width:100%;height:100%;object-fit:cover;}
+.client-info{flex:1;}
+.client-name{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.client-meta{font-size:12px;color:var(--text3);display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;}
+.client-meta span{display:flex;align-items:center;gap:5px;}
+.client-actions{display:flex;gap:8px;flex-wrap:wrap;}
+
+/* TABS */
+.tabs{display:flex;gap:2px;background:rgba(0,0,0,0.3);border-radius:10px;padding:3px;margin-bottom:20px;}
+.tab{
+  flex:1;padding:8px 12px;border-radius:8px;
+  text-align:center;cursor:pointer;
+  font-size:12px;font-weight:400;color:var(--text2);
+  transition:all 0.18s;border:none;background:transparent;
+  font-family:'Jost',sans-serif;
+}
+.tab.active{background:var(--surface);color:var(--gold);font-weight:500;box-shadow:0 1px 4px rgba(0,0,0,0.4);}
+
+/* CARE CARDS */
+.soin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:20px;}
+.soin-card{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:10px;padding:16px;cursor:pointer;
+  transition:all 0.18s;position:relative;overflow:hidden;
+}
+.soin-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg, var(--gold), transparent);
+}
+.soin-card:hover{border-color:rgba(200,169,110,0.3);transform:translateY(-2px);}
+.soin-card .soin-icon{font-size:24px;margin-bottom:8px;}
+.soin-card h3{font-size:13px;font-weight:500;color:var(--text);margin-bottom:4px;}
+.soin-card p{font-size:11px;color:var(--text3);}
+
+/* RECORDS */
+.record-item{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:10px;padding:16px;margin-bottom:10px;
+  display:flex;align-items:flex-start;gap:14px;
+}
+.record-dot{
+  width:10px;height:10px;border-radius:50%;
+  background:var(--gold);margin-top:4px;flex-shrink:0;
+}
+.record-content{flex:1;}
+.record-title{font-size:13px;font-weight:500;color:var(--text);margin-bottom:3px;}
+.record-meta{font-size:11px;color:var(--text3);}
+.record-photos{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+
+/* MOBILE RESPONSIVE */
+@media(max-width:768px){
+  .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:200;transform:translateX(-100%);transition:transform 0.3s;}
+  .sidebar.mobile-open{transform:translateX(0);}
+  .stats-row{grid-template-columns:1fr 1fr;}
+  .form-row{grid-template-columns:1fr;}
+  .form-row.three{grid-template-columns:1fr 1fr;}
+  .topbar-title{font-size:16px;}
+  .content{padding:16px;}
+  .client-header{flex-direction:column;}
+  .mobile-menu-btn{display:flex !important;}
+  .tabs{overflow-x:auto;}
+}
+.mobile-menu-btn{
+  display:none;background:transparent;border:1px solid var(--border2);
+  border-radius:6px;padding:6px 10px;cursor:pointer;color:var(--text2);
+}
+.overlay-mobile{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:199;
+}
+.overlay-mobile.open{display:block;}
+
+/* EMPTY STATE */
+.empty{
+  text-align:center;padding:60px 20px;
+}
+.empty .empty-icon{font-size:48px;margin-bottom:16px;opacity:0.3;}
+.empty p{color:var(--text3);font-size:14px;}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:24px;right:24px;
+  background:var(--surface);border:1px solid rgba(200,169,110,0.3);
+  color:var(--gold2);border-radius:10px;padding:12px 20px;
+  font-size:13px;z-index:2000;
+  transform:translateY(100px);opacity:0;
+  transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  display:flex;align-items:center;gap:10px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.5);
+}
+.toast.show{transform:translateY(0);opacity:1;}
+
+/* SIGNATURE AREA */
+.sig-controls{display:flex;gap:8px;margin-top:8px;}
+.btn-xs{padding:4px 10px;font-size:11px;border-radius:6px;}
+
+/* LIGHTBOX */
+.lightbox{
+  position:fixed;inset:0;background:rgba(0,0,0,0.95);
+  z-index:3000;display:none;align-items:center;justify-content:center;
+}
+.lightbox.open{display:flex;}
+.lightbox img{max-width:90vw;max-height:90vh;border-radius:8px;border:1px solid var(--border2);}
+.lightbox-close{
+  position:absolute;top:20px;right:20px;
+  background:rgba(255,255,255,0.1);border:none;border-radius:8px;
+  padding:10px 14px;color:white;cursor:pointer;font-size:18px;
+}
+
+/* JOTFORM */
+.jf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:24px;}
+.jf-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:18px;
+  display:flex;flex-direction:column;gap:10px;
+  transition:all 0.18s;
+}
+.jf-card:hover{border-color:rgba(200,169,110,0.3);transform:translateY(-2px);}
+.jf-card-icon{font-size:28px;}
+.jf-card-title{font-size:13px;font-weight:500;color:var(--text);}
+.jf-card-desc{font-size:11px;color:var(--text3);line-height:1.5;}
+.jf-card-actions{display:flex;gap:7px;margin-top:4px;flex-wrap:wrap;}
+.btn-jotform{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 14px;border-radius:8px;border:none;cursor:pointer;
+  font-family:'Jost',sans-serif;font-size:12px;font-weight:500;
+  background:rgba(255,106,0,0.12);color:#ff8c42;
+  border:1px solid rgba(255,106,0,0.2);
+  transition:all 0.18s;text-decoration:none;
+}
+.btn-jotform:hover{background:rgba(255,106,0,0.22);color:#ffaa70;}
+.form-type-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:4px;}
+.form-type-card{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:10px;padding:14px;cursor:pointer;
+  transition:all 0.18s;text-align:center;
+}
+.form-type-card:hover,.form-type-card.selected{
+  border-color:rgba(200,169,110,0.4);background:var(--gold-dim);
+}
+.form-type-card .icon{font-size:22px;margin-bottom:6px;}
+.form-type-card h4{font-size:12px;font-weight:500;color:var(--text);margin-bottom:3px;}
+.form-type-card p{font-size:10px;color:var(--text3);}
+
+/* ── PRINT STYLES ── */
+.print-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 14px;border-radius:8px;border:none;cursor:pointer;
+  font-family:'Jost',sans-serif;font-size:12px;font-weight:500;
+  transition:all 0.18s;
+}
+.print-btn-blue{background:rgba(36,113,163,0.15);color:#5dade2;border:1px solid rgba(36,113,163,0.25);}
+.print-btn-blue:hover{background:rgba(36,113,163,0.25);}
+.print-btn-green{background:rgba(39,174,96,0.12);color:#58d68d;border:1px solid rgba(39,174,96,0.2);}
+.print-btn-green:hover{background:rgba(39,174,96,0.22);}
+
+@media print {
+  body * { visibility: hidden !important; }
+  #printZone, #printZone * { visibility: visible !important; }
+  #printZone {
+    position: fixed !important;
+    top: 0 !important; left: 0 !important;
+    width: 100% !important; height: auto !important;
+    background: white !important;
+    color: black !important;
+    padding: 20mm 20mm !important;
+    font-family: Georgia, serif !important;
+    font-size: 11pt !important;
+    z-index: 99999 !important;
+  }
+  #printZone * { color: black !important; background: white !important; border-color: #ccc !important; }
+  .no-print { display: none !important; }
+}
+</style>
+</head>
+<body>
+<div class="overlay-mobile" id="mobileOverlay" onclick="closeMobileMenu()"></div>
+
+<div class="app">
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="logo">
+    <div class="logo-mark">◆ STUDIO</div>
+    <div class="logo-sub">Gestion Clients & Soins</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section-label">Principal</div>
+    <div class="nav-item active" onclick="showView('dashboard',this)">
+      <span class="nav-icon">◈</span><span>Tableau de bord</span>
+    </div>
+    <div class="nav-item" onclick="showView('clients',this)">
+      <span class="nav-icon">👥</span><span>Clients</span>
+      <span class="nav-badge" id="clientCount">0</span>
+    </div>
+    <div class="nav-item" onclick="showView('archives',this)">
+      <span class="nav-icon">📦</span><span>Archives</span>
+    </div>
+
+    <div class="nav-section-label">Documents</div>
+    <div class="nav-item" onclick="showView('questionnaires',this)">
+      <span class="nav-icon">📋</span><span>Questionnaires</span>
+    </div>
+    <div class="nav-item" onclick="showView('autorisations',this)">
+      <span class="nav-icon">✍️</span><span>Autorisations</span>
+    </div>
+
+    <div class="nav-section-label">Soins</div>
+    <div class="nav-item" onclick="showView('soins',this)">
+      <span class="nav-icon">🩺</span><span>Fiches de soins</span>
+    </div>
+
+    <div class="nav-section-label">JotForm</div>
+    <div class="nav-item" onclick="showView('jotform',this)">
+      <span class="nav-icon">📝</span><span>Formulaires en ligne</span>
+    </div>
+  </nav>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <button class="mobile-menu-btn" onclick="openMobileMenu()">☰</button>
+    <div class="topbar-title" id="topbarTitle">Tableau de bord</div>
+    <div class="search-wrap">
+      <span style="color:var(--text3);font-size:13px;">🔍</span>
+      <input type="text" placeholder="Rechercher…" id="globalSearch" oninput="globalSearch()">
+    </div>
+    <button class="btn btn-gold" onclick="openNewClientModal()" style="flex-shrink:0;white-space:nowrap;">+ Nouveau client</button>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- ── DASHBOARD ── -->
+    <div class="view active" id="view-dashboard">
+      <div class="stats-row" id="statsRow">
+        <div class="stat-card">
+          <div class="label">Clients actifs</div>
+          <div class="value" id="stat-actifs">0</div>
+          <div class="sub">dossiers ouverts</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Mineurs</div>
+          <div class="value" id="stat-mineurs">0</div>
+          <div class="sub">avec autorisation</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Soins réalisés</div>
+          <div class="value" id="stat-soins">0</div>
+          <div class="sub">total enregistré</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Archives</div>
+          <div class="value" id="stat-archives">0</div>
+          <div class="sub">dossiers archivés</div>
+        </div>
+      </div>
+
+      <div class="section-title">Derniers clients ajoutés <span>ACTIVITÉ RÉCENTE</span></div>
+      <div class="table-wrap" id="dashRecentTable">
+        <table>
+          <thead><tr><th>Client</th><th>Statut</th><th>Date création</th><th>Soins</th><th></th></tr></thead>
+          <tbody id="dashRecentBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── CLIENTS ── -->
+    <div class="view" id="view-clients">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+        <div class="section-title" style="margin-bottom:0;">Tous les clients</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <select id="filterStatut" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:7px 12px;color:var(--text2);font-family:'Jost',sans-serif;font-size:12px;outline:none;" onchange="renderClients()">
+            <option value="all">Tous les statuts</option>
+            <option value="actif">Actifs</option>
+            <option value="mineur">Mineurs</option>
+          </select>
+          <button class="btn btn-gold" onclick="openNewClientModal()">+ Nouveau client</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Client</th><th>Contact</th><th>Né(e) le</th><th>Statut</th><th>Soins</th><th>Actions</th></tr></thead>
+          <tbody id="clientsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── ARCHIVES ── -->
+    <div class="view" id="view-archives">
+      <div class="section-title">Clients archivés</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Client</th><th>Archivé le</th><th>Soins</th><th>Actions</th></tr></thead>
+          <tbody id="archivesTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── QUESTIONNAIRES ── -->
+    <div class="view" id="view-questionnaires">
+      <div class="section-title">Questionnaires médicaux</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Client</th><th>Type</th><th>Zone</th><th>Date</th><th>Allergies</th><th>Statut</th><th>Actions</th></tr></thead>
+          <tbody id="questTableBody"></tbody>
+        </table>
+      </div>
+      <div class="empty" id="questEmpty" style="display:none">
+        <div class="empty-icon">📋</div>
+        <p>Aucun questionnaire médical — créez d'abord un client puis ajoutez-y un questionnaire.</p>
+      </div>
+    </div>
+
+    <!-- ── AUTORISATIONS ── -->
+    <div class="view" id="view-autorisations">
+      <div class="section-title">Autorisations parentales & Confidentialité</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Client</th><th>Type</th><th>Date</th><th>Signé</th><th>Actions</th></tr></thead>
+          <tbody id="autoTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── SOINS ── -->
+    <div class="view" id="view-soins">
+      <div class="section-title">Toutes les fiches de soins</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Client</th><th>Type de soin</th><th>Zone</th><th>Date</th><th>Photos</th><th>Actions</th></tr></thead>
+          <tbody id="soinsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── JOTFORM ── -->
+    <div class="view" id="view-jotform">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:10px;">
+        <div class="section-title" style="margin-bottom:0;">Formulaires JotForm <span>INTEMPORELLE</span></div>
+        <a href="https://www.jotform.com/myforms/" target="_blank" class="btn btn-ghost btn-sm">Ouvrir JotForm ↗</a>
+      </div>
+      <p style="font-size:12px;color:var(--text3);margin-bottom:20px;">Cliquez sur "Remplir" pour ouvrir le formulaire JotForm, ou "Intégrer" pour l'afficher dans l'app.</p>
+
+      <!-- DOCUMENTS MÉDICAUX & LÉGAUX -->
+      <div class="section-title" style="font-size:14px;margin-bottom:12px;">📋 Documents médicaux &amp; légaux</div>
+      <div class="jf-grid">
+
+        <div class="jf-card">
+          <div class="jf-card-icon">🧒</div>
+          <div class="jf-card-title">Questionnaire Médical Mineur</div>
+          <div class="jf-card-desc">Identité, santé, allergies, chéloïdes · 3 signatures</div>
+          <div class="jf-card-actions">
+            <a class="btn-jotform" href="https://form.jotform.com/260642054066048" target="_blank">📝 Remplir</a>
+            <button class="btn btn-ghost btn-sm" onclick="openJotformEmbed('https://form.jotform.com/260642054066048','Questionnaire Médical Mineur')">⊞ Intégrer</button>
+          </div>
+        </div>
+
+        <div class="jf-card">
+          <div class="jf-card-icon">🧑</div>
+          <div class="jf-card-title">Questionnaire Médical Majeur</div>
+          <div class="jf-card-desc">Identité, pièce d'identité, santé, traitements · Signature</div>
+          <div class="jf-card-actions">
+            <a class="btn-jotform" href="https://form.jotform.com/260641949737065" target="_blank">📝 Remplir</a>
+            <button class="btn btn-ghost btn-sm" onclick="openJotformEmbed('https://form.jotform.com/260641949737065','Questionnaire Médical Majeur')">⊞ Intégrer</button>
+          </div>
+        </div>
+
+        <div class="jf-card">
+          <div class="jf-card-icon">✍️</div>
+          <div class="jf-card-title">Autorisation Parentale</div>
+          <div class="jf-card-desc">Consentement piercing mineur · Parent/tuteur · Zones autorisées</div>
+          <div class="jf-card-actions">
+            <a class="btn-jotform" href="https://form.jotform.com/260642226251045" target="_blank">📝 Remplir</a>
+            <button class="btn btn-ghost btn-sm" onclick="openJotformEmbed('https://form.jotform.com/260642226251045','Autorisation Parentale')">⊞ Intégrer</button>
+          </div>
+        </div>
+
+        <div class="jf-card">
+          <div class="jf-card-icon">🔒</div>
+          <div class="jf-card-title">Engagement de Confidentialité</div>
+          <div class="jf-card-desc">RGPD · 6 obligations · Double signature employé/responsable</div>
+          <div class="jf-card-actions">
+            <a class="btn-jotform" href="https://form.jotform.com/260642323125043" target="_blank">📝 Remplir</a>
+            <button class="btn btn-ghost btn-sm" onclick="openJotformEmbed('https://form.jotform.com/260642323125043','Engagement de Confidentialité')">⊞ Intégrer</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- FICHES DE SOINS -->
+      <div class="section-title" style="font-size:14px;margin-bottom:12px;margin-top:8px;">🩺 Fiches de soins post-piercing</div>
+      <div class="jf-grid">
+
+        <div class="jf-card">
+          <div class="jf-card-icon">👂</div>
+          <div class="jf-card-title">Fiche de Soins — Oreilles</div>
+          <div class="jf-card-desc">11 zones · Lobe, Hélix, Tragus, Daith, Rook, Conch, Industriel…</div>
+          <div class="jf-card-actions">
+            <a class="btn-jotform" href="https://form.jotform.com/260641612738053" target="_blank">📝 Remplir</a>
+            <button class="btn btn-ghost btn-sm" onclick="openJotformEmbed('https://form.jotform.com/260641612738053','Fiche Soins Oreilles')">⊞ Intégrer</button>
+          </div>
+        </div>
+
+        <div class="jf-card">
+          <div class="jf-card-icon">👃</div>
+          <div class="jf-card-title">Fiche de Soins — Nez</div>
+          <div class="jf-card-desc">9 types · Nostril, Septum, Bridge, Rhino, Nasallang, Third Eye…</div>
+          <div class="jf-card-actions">
+            <a class="btn-jotform" href="https://form.jotform.com/260641868698071" target="_blank">📝 Remplir</a>
+            <button class="btn btn-ghost btn-sm" onclick="openJotformEmbed('https://form.jotform.com/260641868698071','Fiche Soins Nez')">⊞ Intégrer</button>
+          </div>
+        </div>
+
+        <div class="jf-card">
+          <div class="jf-card-icon">👄</div>
+          <div class="jf-card-title">Fiche de Soins — Bouche &amp; Lèvres</div>
+          <div class="jf-card-desc">20 zones · Labret, Monroe, Médusa, Langue, Smiley, Snake Bites…</div>
+          <div class="jf-card-actions">
+            <a class="btn-jotform" href="https://form.jotform.com/260641885075059" target="_blank">📝 Remplir</a>
+            <button class="btn btn-ghost btn-sm" onclick="openJotformEmbed('https://form.jotform.com/260641885075059','Fiche Soins Bouche & Lèvres')">⊞ Intégrer</button>
+          </div>
+        </div>
+
+        <div class="jf-card">
+          <div class="jf-card-icon">🔵</div>
+          <div class="jf-card-title">Piercing Nombril</div>
+          <div class="jf-card-desc">5 types · Supérieur, Inversé, Flottant, Double, Surface</div>
+          <div class="jf-card-actions">
+            <a class="btn-jotform" href="https://form.jotform.com/260641889505061" target="_blank">📝 Remplir</a>
+            <button class="btn btn-ghost btn-sm" onclick="openJotformEmbed('https://form.jotform.com/260641889505061','Fiche Soins Nombril')">⊞ Intégrer</button>
+          </div>
+        </div>
+
+        <div class="jf-card">
+          <div class="jf-card-icon">✦</div>
+          <div class="jf-card-title">Piercing Mamelons</div>
+          <div class="jf-card-desc">4 types · Horizontal, Vertical, Diagonal, Double mamelon</div>
+          <div class="jf-card-actions">
+            <a class="btn-jotform" href="https://form.jotform.com/260641491806054" target="_blank">📝 Remplir</a>
+            <button class="btn btn-ghost btn-sm" onclick="openJotformEmbed('https://form.jotform.com/260641491806054','Fiche Soins Mamelons')">⊞ Intégrer</button>
+          </div>
+        </div>
+
+        <div class="jf-card">
+          <div class="jf-card-icon">⬡</div>
+          <div class="jf-card-title">Piercing Arcade &amp; Sourcil</div>
+          <div class="jf-card-desc">4 types · Arcade, Horizontal, Anti-eyebrow, Teardrop</div>
+          <div class="jf-card-actions">
+            <a class="btn-jotform" href="https://form.jotform.com/260642037040041" target="_blank">📝 Remplir</a>
+            <button class="btn btn-ghost btn-sm" onclick="openJotformEmbed('https://form.jotform.com/260642037040041','Piercing Arcade & Sourcil')">⊞ Intégrer</button>
+          </div>
+        </div>
+
+        <div class="jf-card">
+          <div class="jf-card-icon">◎</div>
+          <div class="jf-card-title">Dermal &amp; Piercings de Surface</div>
+          <div class="jf-card-desc">6 types · Microdermal, Skin Diver, Nuque, Sternum, Hanche…</div>
+          <div class="jf-card-actions">
+            <a class="btn-jotform" href="https://form.jotform.com/260643741300043" target="_blank">📝 Remplir</a>
+            <button class="btn btn-ghost btn-sm" onclick="openJotformEmbed('https://form.jotform.com/260643741300043','Dermal & Piercings de Surface')">⊞ Intégrer</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── FICHE CLIENT DETAIL ── -->
+    <div class="view" id="view-ficheClient">
+      <div id="ficheClientContent"></div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ─────── MODALS ─────── -->
+
+<!-- NOUVEAU CLIENT -->
+<div class="modal-overlay" id="modalNewClient">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-header">
+      <h2>Nouveau client</h2>
+      <button class="modal-close" onclick="closeModal('modalNewClient')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-section-divider">Identité</div>
+      <div class="form-row">
+        <div class="form-group"><label>Prénom *</label><input type="text" id="nc_prenom" placeholder="Prénom"></div>
+        <div class="form-group"><label>Nom de famille *</label><input type="text" id="nc_nom" placeholder="Nom"></div>
+      </div>
+      <div class="form-row three">
+        <div class="form-group"><label>Date de naissance</label><input type="date" id="nc_dob"></div>
+        <div class="form-group"><label>Genre</label>
+          <select id="nc_genre"><option value="">—</option><option>Femme</option><option>Homme</option><option>Non-binaire</option><option>Autre</option></select>
+        </div>
+        <div class="form-group"><label>Statut</label>
+          <select id="nc_statut"><option value="actif">Actif</option><option value="mineur">Mineur</option></select>
+        </div>
+      </div>
+      <div class="form-section-divider">Coordonnées</div>
+      <div class="form-row">
+        <div class="form-group"><label>Téléphone</label><input type="tel" id="nc_tel" placeholder="+33 6 00 00 00 00"></div>
+        <div class="form-group"><label>Email</label><input type="email" id="nc_email" placeholder="email@exemple.com"></div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group"><label>Adresse</label><input type="text" id="nc_adresse" placeholder="Rue, ville, code postal"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Urgence — Nom</label><input type="text" id="nc_urg_nom" placeholder="Nom du contact"></div>
+        <div class="form-group"><label>Urgence — Téléphone</label><input type="tel" id="nc_urg_tel" placeholder="+33 6 00 00 00 00"></div>
+      </div>
+      <div class="form-section-divider">Photo du client</div>
+      <div class="photo-upload" id="ncPhotoZone">
+        <input type="file" accept="image/*" capture="user" onchange="handlePhotoUpload(this,'ncPhotoPreviews','nc_photos')">
+        <div class="icon">📸</div>
+        <p><strong>Appuyez pour prendre une photo</strong> ou sélectionner depuis la galerie</p>
+        <p style="margin-top:4px;">Photo d'identité + pièce d'identité acceptées</p>
+      </div>
+      <div class="photo-preview" id="ncPhotoPreviews"></div>
+      <input type="hidden" id="nc_photos" value="[]">
+      <div class="form-section-divider">Notes</div>
+      <div class="form-row full">
+        <div class="form-group"><label>Observations libres</label><textarea id="nc_notes" placeholder="Allergies connues, remarques…"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalNewClient')">Annuler</button>
+      <button class="btn btn-gold" onclick="saveNewClient()">Créer le dossier</button>
+    </div>
+  </div>
+</div>
+
+<!-- QUESTIONNAIRE MÉDICAL MINEUR — fidèle au document Word Société Intemporelle -->
+<div class="modal-overlay" id="modalQuestionnaire">
+  <div class="modal" style="max-width:680px;">
+    <div class="modal-header">
+      <div>
+        <h2 id="questModalTitle">Questionnaire Médical &amp; Santé — Mineur</h2>
+        <div style="font-size:11px;color:var(--text3);margin-top:3px;letter-spacing:1px;">SOCIÉTÉ INTEMPORELLE · CONFIDENTIEL</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modalQuestionnaire')">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- TYPE SELECTOR -->
+      <div class="form-type-grid" style="margin-bottom:4px;">
+        <div class="form-type-card selected" data-qtype="mineur" onclick="selectQType(this)">
+          <div class="icon">🧒</div><h4>Mineur</h4><p>Moins de 18 ans</p>
+        </div>
+        <div class="form-type-card" data-qtype="majeur" onclick="selectQType(this)">
+          <div class="icon">🧑</div><h4>Majeur</h4><p>18 ans et plus</p>
+        </div>
+      </div>
+
+      <!-- SECTION 1 — IDENTITÉ DU MINEUR -->
+      <div class="form-section-divider">1 · Identité du mineur</div>
+      <div class="form-row full">
+        <div class="form-group"><label>Client *</label>
+          <select id="q_client"><option value="">— Sélectionner un client —</option></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Nom de famille</label>
+          <input type="text" id="q_nom" placeholder="Nom de famille">
+        </div>
+        <div class="form-group"><label>Prénom(s)</label>
+          <input type="text" id="q_prenom" placeholder="Prénom(s)">
+        </div>
+      </div>
+      <div class="form-row three">
+        <div class="form-group"><label>Date de naissance</label>
+          <input type="date" id="q_dob">
+        </div>
+        <div class="form-group"><label>Âge</label>
+          <input type="number" id="q_age" placeholder="ex : 15" min="0" max="17">
+        </div>
+        <div class="form-group"><label>Date du questionnaire</label>
+          <input type="date" id="q_date">
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group"><label>Adresse complète</label>
+          <input type="text" id="q_adresse" placeholder="Numéro, rue, ville">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Code postal — Ville</label>
+          <input type="text" id="q_cp_ville" placeholder="ex : 37000 — Tours">
+        </div>
+        <div class="form-group"><label>Téléphone du mineur (facultatif)</label>
+          <input type="tel" id="q_tel_mineur" placeholder="+33 6 00 00 00 00">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Pièce d'identité présentée</label>
+          <select id="q_piece_id">
+            <option value="">— Sélectionner —</option>
+            <option>CNI (Carte Nationale d'Identité)</option>
+            <option>Passeport</option>
+            <option>Permis de conduire</option>
+            <option>Autre</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Numéro de la pièce</label>
+          <input type="text" id="q_num_piece" placeholder="N° de la pièce d'identité">
+        </div>
+      </div>
+
+      <!-- SECTION 2 — ZONE & BIJOU -->
+      <div class="form-section-divider">2 · Zone à percer &amp; bijou souhaité</div>
+      <div class="form-row">
+        <div class="form-group"><label>Zone à percer</label>
+          <select id="q_zone">
+            <option value="">— Sélectionner —</option>
+            <option>Oreilles — Lobe</option>
+            <option>Oreilles — Hélix</option>
+            <option>Oreilles — Tragus</option>
+            <option>Oreilles — Autre</option>
+            <option>Nez — Narine</option>
+            <option>Nez — Septum</option>
+            <option>Bouche / Lèvres</option>
+            <option>Nombril</option>
+            <option>Arcade Sourcil</option>
+            <option>Surface</option>
+            <option>Autre</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Type de bijou souhaité</label>
+          <input type="text" id="q_bijou" placeholder="ex : Anneau, Labret, Barbell…">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Premier piercing ?</label>
+          <select id="q_premier">
+            <option value="oui">Oui — premier piercing</option>
+            <option value="non">Non — déjà percé(e)</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Zone(s) déjà percée(s) (si non)</label>
+          <input type="text" id="q_zones_exist" placeholder="ex : Lobe gauche, Nez…">
+        </div>
+      </div>
+
+      <!-- SECTION 3 — SANTÉ -->
+      <div class="form-section-divider">3 · Informations médicales &amp; santé</div>
+      <div class="form-row">
+        <div class="form-group"><label>Suivi médical en cours ?</label>
+          <select id="q_suivi">
+            <option value="non">Non</option>
+            <option value="oui">Oui — préciser médecin / spécialité</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Médecin / Spécialité (si oui)</label>
+          <input type="text" id="q_medecin" placeholder="Dr. Nom — Spécialité">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Traitements médicaux actuels</label>
+          <select id="q_traitement">
+            <option value="aucun">Aucun</option>
+            <option value="oui">Oui — préciser ci-dessous</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Lesquels (si traitement)</label>
+          <input type="text" id="q_traitement_detail" placeholder="Nom des médicaments">
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group"><label>Allergies connues</label>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:6px;" id="qAllergies">
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);cursor:pointer;"><input type="checkbox" style="width:auto;" id="q_all_aucune" value="aucune"> Aucune</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);cursor:pointer;"><input type="checkbox" style="width:auto;" id="q_all_med" value="medicaments"> Médicaments</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);cursor:pointer;"><input type="checkbox" style="width:auto;" id="q_all_metaux" value="metaux"> Métaux</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);cursor:pointer;"><input type="checkbox" style="width:auto;" id="q_all_latex" value="latex"> Latex</label>
+          </div>
+          <input type="text" id="q_all_autres" placeholder="Autres allergies — préciser" style="margin-top:8px;">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Tendance aux chéloïdes ?</label>
+          <select id="q_cheloides">
+            <option value="non">Non</option>
+            <option value="oui">Oui — préciser la zone</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Zone(s) concernée(s)</label>
+          <input type="text" id="q_cheloides_zone" placeholder="ex : Oreilles…">
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group"><label>Informations médicales complémentaires</label>
+          <textarea id="q_infos" placeholder="Toute autre information médicale pertinente (maladies, opérations, etc.)…" style="min-height:80px;"></textarea>
+        </div>
+      </div>
+
+      <!-- SECTION 4 — SIGNATURES -->
+      <div class="form-section-divider">4 · Signatures</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div>
+          <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;font-weight:500;">Représentant n°1</div>
+          <canvas class="sig-pad" id="sigPadQuest" style="height:110px;"></canvas>
+          <div class="sig-controls"><button class="btn btn-ghost btn-xs" onclick="clearSig('sigPadQuest')">Effacer</button></div>
+        </div>
+        <div>
+          <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(200,169,110,0.5);margin-bottom:8px;font-weight:500;">Représentant n°2 (optionnel)</div>
+          <canvas class="sig-pad" id="sigPadQuest2" style="height:110px;"></canvas>
+          <div class="sig-controls"><button class="btn btn-ghost btn-xs" onclick="clearSig('sigPadQuest2')">Effacer</button></div>
+        </div>
+      </div>
+      <div style="margin-top:14px;">
+        <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;font-weight:500;">Pierceur(se) — Société Intemporelle</div>
+        <canvas class="sig-pad" id="sigPadPierceur" style="height:100px;"></canvas>
+        <div class="sig-controls"><button class="btn btn-ghost btn-xs" onclick="clearSig('sigPadPierceur')">Effacer</button></div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalQuestionnaire')">Annuler</button>
+      <button class="btn btn-gold" onclick="saveQuestionnaire()">✓ Enregistrer le questionnaire</button>
+    </div>
+  </div>
+</div>
+
+<!-- AUTORISATION PARENTALE -->
+<div class="modal-overlay" id="modalAutorisation">
+  <div class="modal" style="max-width:620px;">
+    <div class="modal-header">
+      <h2 id="autoModalTitle">Autorisation / Confidentialité</h2>
+      <button class="modal-close" onclick="closeModal('modalAutorisation')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-type-grid" id="autoTypeGrid">
+        <div class="form-type-card selected" data-type="parentale" onclick="selectAutoType(this)">
+          <div class="icon">✍️</div><h4>Autorisation parentale</h4><p>Pour les clients mineurs</p>
+        </div>
+        <div class="form-type-card" data-type="confidentialite" onclick="selectAutoType(this)">
+          <div class="icon">🔒</div><h4>Engagement confidentialité</h4><p>Accord RGPD client</p>
+        </div>
+      </div>
+      <div class="form-section-divider" style="margin-top:14px;">Informations</div>
+      <div class="form-row full">
+        <div class="form-group"><label>Client concerné</label>
+          <select id="a_client"><option value="">— Sélectionner —</option></select>
+        </div>
+      </div>
+      <div id="autoParentaleFields">
+        <div class="form-row">
+          <div class="form-group"><label>Nom du parent / tuteur</label><input type="text" id="a_parent_nom" placeholder="Nom complet"></div>
+          <div class="form-group"><label>Lien de parenté</label>
+            <select id="a_lien"><option>Mère</option><option>Père</option><option>Tuteur légal</option><option>Autre</option></select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Téléphone du parent</label><input type="tel" id="a_parent_tel" placeholder="+33 6 00 00 00 00"></div>
+          <div class="form-group"><label>Date</label><input type="date" id="a_date"></div>
+        </div>
+        <div class="form-row full">
+          <div class="form-group"><label>Zones de piercing autorisées</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:4px;" id="autoZones">
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);cursor:pointer;"><input type="checkbox" style="width:auto;" value="oreilles"> Oreilles</label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);cursor:pointer;"><input type="checkbox" style="width:auto;" value="nez"> Nez</label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);cursor:pointer;"><input type="checkbox" style="width:auto;" value="bouche"> Bouche/Lèvres</label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);cursor:pointer;"><input type="checkbox" style="width:auto;" value="nombril"> Nombril</label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);cursor:pointer;"><input type="checkbox" style="width:auto;" value="arcade"> Arcade sourcil</label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);cursor:pointer;"><input type="checkbox" style="width:auto;" value="surface"> Surface</label>
+            </div>
+          </div>
+        </div>
+        <div class="form-section-divider">Photo CNI parent</div>
+        <div class="photo-upload">
+          <input type="file" accept="image/*" capture="environment" onchange="handlePhotoUpload(this,'autoPhotoPrev','a_photos')">
+          <div class="icon">🪪</div>
+          <p><strong>Photo CNI parent</strong> recto/verso</p>
+        </div>
+        <div class="photo-preview" id="autoPhotoPrev"></div>
+        <input type="hidden" id="a_photos" value="[]">
+      </div>
+      <div class="form-section-divider">Signature électronique</div>
+      <canvas class="sig-pad" id="sigPadAuto"></canvas>
+      <div class="sig-controls">
+        <button class="btn btn-ghost btn-xs" onclick="clearSig('sigPadAuto')">Effacer</button>
+        <span style="font-size:11px;color:var(--text3);margin-left:8px;">Signature du parent ou du client</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalAutorisation')">Annuler</button>
+      <button class="btn btn-gold" onclick="saveAutorisation()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- FICHE DE SOIN — 7 types issus des fiches Word -->
+<div class="modal-overlay" id="modalSoin">
+  <div class="modal" style="max-width:720px;">
+    <div class="modal-header">
+      <div>
+        <h2 id="soinModalTitle">Fiche de Soins</h2>
+        <div style="font-size:11px;color:var(--text3);margin-top:3px;letter-spacing:1px;">SOCIÉTÉ INTEMPORELLE · POST-PIERCING</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modalSoin')">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- TYPE SELECTOR VISUEL -->
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:16px;">
+        <div class="form-type-card selected" data-stype="oreilles" onclick="selectSoinType(this)" style="padding:10px 6px;">
+          <div class="icon" style="font-size:18px;">👂</div><h4 style="font-size:10px;">Oreilles</h4>
+        </div>
+        <div class="form-type-card" data-stype="nez" onclick="selectSoinType(this)" style="padding:10px 6px;">
+          <div class="icon" style="font-size:18px;">👃</div><h4 style="font-size:10px;">Nez</h4>
+        </div>
+        <div class="form-type-card" data-stype="bouche" onclick="selectSoinType(this)" style="padding:10px 6px;">
+          <div class="icon" style="font-size:18px;">👄</div><h4 style="font-size:10px;">Bouche</h4>
+        </div>
+        <div class="form-type-card" data-stype="nombril" onclick="selectSoinType(this)" style="padding:10px 6px;">
+          <div class="icon" style="font-size:18px;">🔵</div><h4 style="font-size:10px;">Nombril</h4>
+        </div>
+        <div class="form-type-card" data-stype="mamelons" onclick="selectSoinType(this)" style="padding:10px 6px;">
+          <div class="icon" style="font-size:18px;">✦</div><h4 style="font-size:10px;">Mamelons</h4>
+        </div>
+        <div class="form-type-card" data-stype="arcade" onclick="selectSoinType(this)" style="padding:10px 6px;">
+          <div class="icon" style="font-size:18px;">⬡</div><h4 style="font-size:10px;">Arcade</h4>
+        </div>
+        <div class="form-type-card" data-stype="surface" onclick="selectSoinType(this)" style="padding:10px 6px;">
+          <div class="icon" style="font-size:18px;">◎</div><h4 style="font-size:10px;">Surface</h4>
+        </div>
+      </div>
+
+      <!-- INFO ZONE DYNAMIQUE -->
+      <div id="soinInfoZone" style="background:rgba(200,169,110,0.06);border:1px solid rgba(200,169,110,0.15);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--text3);display:none;"></div>
+
+      <div class="form-section-divider">1 · Client &amp; Date</div>
+      <div class="form-row">
+        <div class="form-group"><label>Client *</label>
+          <select id="s_client"><option value="">— Sélectionner —</option></select>
+        </div>
+        <div class="form-group"><label>Date du soin</label>
+          <input type="date" id="s_date">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Localisation précise *</label>
+          <select id="s_zone" onchange="updateSoinInfo()"></select>
+        </div>
+        <div class="form-group"><label>Praticien</label>
+          <input type="text" id="s_praticien" placeholder="Nom du pierceur">
+        </div>
+      </div>
+
+      <div class="form-section-divider">2 · Bijou posé</div>
+      <div class="form-row three">
+        <div class="form-group"><label>Type de bijou</label>
+          <select id="s_bijou_type">
+            <option value="">— Sélectionner —</option>
+            <option>Anneau BCR</option><option>Barbell droit</option><option>Barbell courbé (Bananabell)</option>
+            <option>Labret droit</option><option>Labret plat (Flatback)</option>
+            <option>Fer à cheval</option><option>Ancre microdermale</option>
+            <option>Skin Diver</option><option>Agrafe (Staple bar)</option><option>Autre</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Calibre</label>
+          <select id="s_calibre">
+            <option>1,2 mm (16G)</option><option>1,6 mm (14G)</option>
+            <option>0,8 mm (20G)</option><option>2,0 mm (12G)</option><option>Autre</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Longueur / Diamètre</label>
+          <input type="text" id="s_longueur" placeholder="ex : 8mm, 10mm, 11mm">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Matériau</label>
+          <select id="s_materiau">
+            <option>Titane G23 (ASTM F136)</option>
+            <option>Acier chirurgical 316L</option>
+            <option>Or 14k</option><option>Or 18k</option>
+            <option>Niobium</option><option>PTFE (flexible)</option>
+            <option>Argent 925</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Bijou personnalisé (détail)</label>
+          <input type="text" id="s_bijou_detail" placeholder="Couleur, gemme, modèle…">
+        </div>
+      </div>
+
+      <div class="form-section-divider">3 · Déroulement</div>
+      <div class="form-row three">
+        <div class="form-group"><label>Saignement</label>
+          <select id="s_saignement">
+            <option value="non">Non</option>
+            <option value="leger">Léger</option>
+            <option value="modere">Modéré</option>
+            <option value="oui">Important</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Déroulement global</label>
+          <select id="s_deroulement">
+            <option>Excellent</option><option>Bon</option>
+            <option>Difficile</option><option>Interrompu</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Douleur ressentie (client)</label>
+          <select id="s_douleur">
+            <option value="1">1 — Indolore</option>
+            <option value="2">2 — Très légère</option>
+            <option value="3" selected>3 — Modérée</option>
+            <option value="4">4 — Intense</option>
+            <option value="5">5 — Très intense</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Morphologie favorable ?</label>
+          <select id="s_morpho">
+            <option value="oui">Oui — anatomie adaptée</option>
+            <option value="limite">Limite — évaluation faite</option>
+            <option value="non">Non — contre-indiqué</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Risque de rejet évalué</label>
+          <select id="s_rejet">
+            <option value="faible">Faible</option>
+            <option value="modere">Modéré</option>
+            <option value="eleve">Élevé — client informé</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-section-divider">4 · Photos avant / après</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <div class="photo-upload">
+            <input type="file" accept="image/*" capture="environment" onchange="handlePhotoUpload(this,'soinAvantPrev','s_photos_avant')">
+            <div class="icon">📸</div><p><strong>Photo AVANT</strong></p>
+          </div>
+          <div class="photo-preview" id="soinAvantPrev"></div>
+          <input type="hidden" id="s_photos_avant" value="[]">
+        </div>
+        <div>
+          <div class="photo-upload">
+            <input type="file" accept="image/*" capture="environment" onchange="handlePhotoUpload(this,'soinApresPrev','s_photos_apres')">
+            <div class="icon">📸</div><p><strong>Photo APRÈS</strong></p>
+          </div>
+          <div class="photo-preview" id="soinApresPrev"></div>
+          <input type="hidden" id="s_photos_apres" value="[]">
+        </div>
+      </div>
+
+      <div class="form-section-divider">5 · Conseils remis au client</div>
+      <div id="conseilsZone" style="background:rgba(39,174,96,0.06);border:1px solid rgba(39,174,96,0.15);border-radius:8px;padding:12px 14px;margin-bottom:12px;font-size:12px;color:rgba(232,224,212,0.6);display:none;"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Fiche conseils remise ?</label>
+          <select id="s_conseils_remis">
+            <option value="oui">Oui — remise au client</option>
+            <option value="non">Non</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Prochain rendez-vous</label>
+          <input type="date" id="s_rdv">
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group"><label>Observations / Notes</label>
+          <textarea id="s_obs" placeholder="Remarques particulières, réactions, précisions…" style="min-height:70px;"></textarea>
+        </div>
+      </div>
+
+      <div class="form-section-divider">6 · Signature client</div>
+      <canvas class="sig-pad" id="sigPadSoin"></canvas>
+      <div class="sig-controls">
+        <button class="btn btn-ghost btn-xs" onclick="clearSig('sigPadSoin')">Effacer</button>
+        <span style="font-size:11px;color:var(--text3);margin-left:8px;">Le client certifie avoir reçu les conseils de cicatrisation</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalSoin')">Annuler</button>
+      <button class="btn btn-gold" onclick="saveSoin()">✓ Enregistrer la fiche de soin</button>
+    </div>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightboxImg" src="" alt="">
+</div>
+
+<!-- FAB -->
+<button class="fab" onclick="openNewClientModal()" id="fabBtn">
+  ＋ Nouveau client
+</button>
+
+<!-- JOTFORM EMBED MODAL -->
+<div class="modal-overlay" id="modalJotform">
+  <div class="modal" style="max-width:860px;height:90vh;display:flex;flex-direction:column;">
+    <div class="modal-header" style="flex-shrink:0;">
+      <h2 id="jotformModalTitle">Formulaire JotForm</h2>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <a id="jotformExternalLink" href="#" target="_blank" class="btn-jotform" style="font-size:11px;padding:5px 10px;">↗ Ouvrir dans JotForm</a>
+        <button class="modal-close" onclick="closeModal('modalJotform')">✕</button>
+      </div>
+    </div>
+    <div style="flex:1;overflow:hidden;border-radius:0 0 12px 12px;">
+      <iframe id="jotformIframe" src="" style="width:100%;height:100%;border:none;border-radius:0 0 12px 12px;"></iframe>
+    </div>
+  </div>
+</div>
+
+<!-- PRINT ZONE (hidden, used only for printing) -->
+<div id="printZone" style="display:none;"></div>
+
+<!-- MODAL IMPRESSION -->
+<div class="modal-overlay" id="modalPrint">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-header">
+      <h2>🖨️ Imprimer / Exporter</h2>
+      <button class="modal-close" onclick="closeModal('modalPrint')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--text2);font-size:13px;margin-bottom:20px;">Choisissez le document à imprimer pour ce client :</p>
+      <div id="printChoices" style="display:flex;flex-direction:column;gap:10px;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalPrint')">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">✓ <span id="toastMsg"></span></div>
+
+<script>
+// ═══════════════════════════════════════════
+// DATA STORE
+// ═══════════════════════════════════════════
+let DB = {
+  clients: [],
+  questionnaires: [],
+  autorisations: [],
+  soins: []
+};
+
+function loadDB(){
+  try{
+    const s = localStorage.getItem('studioApp_v2');
+    if(s) DB = JSON.parse(s);
+  }catch(e){}
+}
+function saveDB(){
+  localStorage.setItem('studioApp_v2', JSON.stringify(DB));
+}
+function uid(){return 'CLI-'+Date.now().toString(36).toUpperCase();}
+
+// ═══════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════
+let currentView = 'dashboard';
+function showView(name, el){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(el) el.classList.add('active');
+  currentView = name;
+  const titles = {
+    dashboard:'Tableau de bord', clients:'Clients', archives:'Archives',
+    questionnaires:'Questionnaires médicaux', autorisations:'Autorisations & Confidentialité',
+    soins:'Fiches de soins', ficheClient:'Fiche client', jotform:'Formulaires JotForm'
+  };
+  document.getElementById('topbarTitle').textContent = titles[name]||name;
+  // FAB visibility
+  const fab = document.getElementById('fabBtn');
+  if(fab) fab.style.display = (name==='clients'||name==='dashboard') ? 'none' : 'flex';
+  closeMobileMenu();
+  refreshView(name);
+}
+function openMobileMenu(){
+  document.getElementById('sidebar').classList.add('mobile-open');
+  document.getElementById('mobileOverlay').classList.add('open');
+}
+function closeMobileMenu(){
+  document.getElementById('sidebar').classList.remove('mobile-open');
+  document.getElementById('mobileOverlay').classList.remove('open');
+}
+
+// ═══════════════════════════════════════════
+// REFRESH VIEWS
+// ═══════════════════════════════════════════
+function refreshView(name){
+  switch(name){
+    case 'dashboard': renderDashboard(); break;
+    case 'clients': renderClients(); break;
+    case 'archives': renderArchives(); break;
+    case 'questionnaires': renderQuestionnaires(); break;
+    case 'autorisations': renderAutorisations(); break;
+    case 'soins': renderSoins(); break;
+  }
+  updateStats();
+}
+
+function updateStats(){
+  const actifs = DB.clients.filter(c=>c.statut!=='archive').length;
+  const mineurs = DB.clients.filter(c=>c.statut==='mineur').length;
+  const archives = DB.clients.filter(c=>c.statut==='archive').length;
+  document.getElementById('stat-actifs').textContent = actifs;
+  document.getElementById('stat-mineurs').textContent = mineurs;
+  document.getElementById('stat-soins').textContent = DB.soins.length;
+  document.getElementById('stat-archives').textContent = archives;
+  document.getElementById('clientCount').textContent = actifs;
+}
+
+// ═══════════════════════════════════════════
+// RENDER HELPERS
+// ═══════════════════════════════════════════
+function initials(c){return ((c.prenom||'?')[0]+(c.nom||'?')[0]).toUpperCase();}
+function formatDate(d){if(!d)return '—';const p=d.split('-');return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:d;}
+function age(dob){if(!dob)return null;const d=new Date(dob);const n=new Date();let a=n.getFullYear()-d.getFullYear();if(n<new Date(n.getFullYear(),d.getMonth(),d.getDate()))a--;return a;}
+
+function clientBadge(c){
+  if(c.statut==='archive') return '<span class="badge badge-archive">Archivé</span>';
+  if(c.statut==='mineur') return '<span class="badge badge-minor">Mineur</span>';
+  return '<span class="badge badge-active">Actif</span>';
+}
+function clientAvatar(c){
+  if(c.photos && c.photos.length>0)
+    return `<div class="avatar"><img src="${c.photos[0]}" alt=""></div>`;
+  return `<div class="avatar">${initials(c)}</div>`;
+}
+
+// ═══════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════
+function renderDashboard(){
+  const body = document.getElementById('dashRecentBody');
+  const recent = [...DB.clients].slice(-8).reverse();
+  if(!recent.length){
+    body.innerHTML=`<tr><td colspan="5">
+      <div style="text-align:center;padding:48px 20px;">
+        <div style="font-size:48px;margin-bottom:16px;opacity:0.25;">◆</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--gold2);margin-bottom:8px;">Bienvenue dans votre Studio</div>
+        <p style="color:var(--text3);font-size:13px;margin-bottom:20px;">Commencez par créer votre premier dossier client.</p>
+        <button class="btn btn-gold" onclick="openNewClientModal()" style="margin:0 auto;">+ Créer le premier client</button>
+      </div>
+    </td></tr>`;
+    return;
+  }
+  body.innerHTML = recent.map(c=>{
+    const sc = DB.soins.filter(s=>s.clientId===c.id).length;
+    return `<tr onclick="openFicheClient('${c.id}')">
+      <td><div class="td-flex">${clientAvatar(c)}<span class="name">${c.prenom} ${c.nom}</span></div></td>
+      <td>${clientBadge(c)}</td>
+      <td>${formatDate(c.dateCreation)}</td>
+      <td><span class="badge badge-soin">${sc} soin${sc>1?'s':''}</span></td>
+      <td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openFicheClient('${c.id}')">Voir →</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
+// CLIENTS
+// ═══════════════════════════════════════════
+function renderClients(){
+  const body = document.getElementById('clientsTableBody');
+  const filtre = document.getElementById('filterStatut').value;
+  const q = document.getElementById('globalSearch').value.toLowerCase();
+  let list = DB.clients.filter(c=>c.statut!=='archive');
+  if(filtre==='mineur') list = list.filter(c=>c.statut==='mineur');
+  if(filtre==='actif') list = list.filter(c=>c.statut==='actif');
+  if(q) list = list.filter(c=>(c.prenom+' '+c.nom+' '+c.email+' '+c.tel).toLowerCase().includes(q));
+  if(!list.length){
+    body.innerHTML=`<tr><td colspan="6">
+      <div style="text-align:center;padding:40px 20px;">
+        <div style="font-size:36px;opacity:0.2;margin-bottom:12px;">👥</div>
+        <p style="color:var(--text3);font-size:13px;margin-bottom:16px;">Aucun client trouvé.</p>
+        <button class="btn btn-gold btn-sm" onclick="openNewClientModal()">+ Nouveau client</button>
+      </div>
+    </td></tr>`;
+    return;
+  }
+  body.innerHTML = list.map(c=>{
+    const sc = DB.soins.filter(s=>s.clientId===c.id).length;
+    return `<tr onclick="openFicheClient('${c.id}')">
+      <td><div class="td-flex">${clientAvatar(c)}<span class="name">${c.prenom} ${c.nom}</span></div></td>
+      <td style="color:var(--text3)">${c.tel||'—'}</td>
+      <td>${c.dob?formatDate(c.dob)+' ('+age(c.dob)+' ans)':'—'}</td>
+      <td>${clientBadge(c)}</td>
+      <td><span class="badge badge-soin">${sc}</span></td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openFicheClient('${c.id}')">Ouvrir</button>
+        <button class="btn btn-danger btn-sm" style="margin-left:4px;" onclick="event.stopPropagation();archiveClient('${c.id}')">Archiver</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function archiveClient(id){
+  const c = DB.clients.find(x=>x.id===id);
+  if(!c) return;
+  if(!confirm(`Archiver le dossier de ${c.prenom} ${c.nom} ?`)) return;
+  c.statut = 'archive';
+  c.dateArchive = new Date().toISOString().split('T')[0];
+  saveDB(); renderClients(); updateStats(); toast('Dossier archivé');
+}
+
+// ═══════════════════════════════════════════
+// ARCHIVES
+// ═══════════════════════════════════════════
+function renderArchives(){
+  const body = document.getElementById('archivesTableBody');
+  const list = DB.clients.filter(c=>c.statut==='archive');
+  if(!list.length){
+    body.innerHTML='<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--text3);">Aucun dossier archivé.</td></tr>';
+    return;
+  }
+  body.innerHTML = list.map(c=>{
+    const sc = DB.soins.filter(s=>s.clientId===c.id).length;
+    return `<tr onclick="openFicheClient('${c.id}')">
+      <td><div class="td-flex">${clientAvatar(c)}<span class="name">${c.prenom} ${c.nom}</span></div></td>
+      <td style="color:var(--text3)">${formatDate(c.dateArchive)}</td>
+      <td><span class="badge badge-soin">${sc}</span></td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();restoreClient('${c.id}')">Restaurer</button>
+        <button class="btn btn-ghost btn-sm" style="margin-left:4px;" onclick="event.stopPropagation();openFicheClient('${c.id}')">Voir</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+function restoreClient(id){
+  const c = DB.clients.find(x=>x.id===id);
+  if(!c) return;
+  c.statut = 'actif'; delete c.dateArchive;
+  saveDB(); renderArchives(); updateStats(); toast('Dossier restauré ✓');
+}
+
+// ═══════════════════════════════════════════
+// QUESTIONNAIRES
+// ═══════════════════════════════════════════
+function renderQuestionnaires(){
+  const body = document.getElementById('questTableBody');
+  const empty = document.getElementById('questEmpty');
+  if(!DB.questionnaires.length){
+    body.innerHTML=''; empty.style.display='block'; return;
+  }
+  empty.style.display='none';
+  body.innerHTML = DB.questionnaires.map(q=>{
+    const c = DB.clients.find(x=>x.id===q.clientId);
+    const nom = c?c.prenom+' '+c.nom:'Client supprimé';
+    const allergiesStr = q.allergies && q.allergies.length ? q.allergies.join(', ') : (q.autresAllergies||'Aucune');
+    return `<tr>
+      <td><span class="name">${nom}</span></td>
+      <td><span class="badge ${q.type==='mineur'?'badge-minor':'badge-major'}">${q.type==='mineur'?'Mineur':'Majeur'}</span></td>
+      <td>${q.zone||'—'}</td>
+      <td>${formatDate(q.date)}</td>
+      <td style="color:var(--text3);font-size:12px;">${allergiesStr}</td>
+      <td><span class="badge badge-active">✓ Signé</span></td>
+      <td><button class="btn btn-ghost btn-sm" onclick="openFicheClient('${q.clientId}')">Voir fiche</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
+// AUTORISATIONS
+// ═══════════════════════════════════════════
+function renderAutorisations(){
+  const body = document.getElementById('autoTableBody');
+  if(!DB.autorisations.length){
+    body.innerHTML='<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text3);">Aucune autorisation enregistrée.</td></tr>';
+    return;
+  }
+  body.innerHTML = DB.autorisations.map(a=>{
+    const c = DB.clients.find(x=>x.id===a.clientId);
+    const nom = c?c.prenom+' '+c.nom:'—';
+    const typeLabel = a.type==='parentale'?'Autorisation parentale':'Confidentialité RGPD';
+    return `<tr>
+      <td><span class="name">${nom}</span></td>
+      <td>${typeLabel}</td>
+      <td>${formatDate(a.date)}</td>
+      <td><span class="badge ${a.signature?'badge-active':'badge-archive'}">${a.signature?'Signé':'Non signé'}</span></td>
+      <td><button class="btn btn-ghost btn-sm" onclick="openFicheClient('${a.clientId}')">Voir fiche</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
+// SOINS
+// ═══════════════════════════════════════════
+const soinIcons = {oreilles:'👂',nez:'👃',bouche:'👄',nombril:'🔵',mamelons:'✦',arcade:'⬡',surface:'◎'};
+const soinLabels = {oreilles:'Oreilles',nez:'Nez',bouche:'Bouche & Lèvres',nombril:'Nombril',mamelons:'Mamelons',arcade:'Arcade & Sourcil',surface:'Surface'};
+
+// Données complètes issues des fiches Word
+const soinZonesData = {
+  oreilles: [
+    {z:'Lobe',cic:'6-8 sem.',bijou:'Anneau / Stud',diff:'★☆☆☆☆',rejet:false},
+    {z:'Anti-tragus',cic:'6-12 mois',bijou:'BCR / Labret',diff:'★★☆☆☆',rejet:false},
+    {z:'Tragus',cic:'6-12 mois',bijou:'Labret / Stud',diff:'★★☆☆☆',rejet:false,morpho:true},
+    {z:'Daith',cic:'6-12 mois',bijou:'Anneau BCR',diff:'★★☆☆☆',rejet:false},
+    {z:'Anti-hélix',cic:'6-12 mois',bijou:'Labret / BCR',diff:'★★☆☆☆',rejet:false},
+    {z:'Rook',cic:'6-12 mois',bijou:'Barbell courbé',diff:'★★★☆☆',rejet:false},
+    {z:'Industriel',cic:'6-12 mois',bijou:'Barbell droit long',diff:'★★★☆☆',rejet:false},
+    {z:'Hélix',cic:'6-12 mois',bijou:'BCR / Labret',diff:'★☆☆☆☆',rejet:false},
+    {z:'Flat',cic:'6-12 mois',bijou:'Labret plat',diff:'★★☆☆☆',rejet:false},
+    {z:'Snug',cic:'6-12 mois',bijou:'Barbell courbé',diff:'★★★☆☆',rejet:false},
+    {z:'Conch',cic:'6-12 mois',bijou:'BCR / Labret',diff:'★★☆☆☆',rejet:false},
+  ],
+  nez: [
+    {z:'Narine (Nostril)',cic:'4-6 mois',bijou:'Stud / Anneau / Vis',diff:'★☆☆☆☆',rejet:false},
+    {z:'Narine haute (High Nostril)',cic:'6-9 mois',bijou:'Stud / Vis',diff:'★★☆☆☆',rejet:false},
+    {z:'Double Nostril',cic:'4-6 mois',bijou:'Stud / Anneau',diff:'★★☆☆☆',rejet:false},
+    {z:'Septum',cic:'6-8 sem.',bijou:'Anneau / Fer à cheval',diff:'★☆☆☆☆',rejet:false},
+    {z:'Bridge (Earl)',cic:'2-3 mois',bijou:'Barbell droit',diff:'★★★☆☆',rejet:true,morpho:true},
+    {z:'Austin Bar',cic:'2-3 mois',bijou:'Barbell droit',diff:'★★★☆☆',rejet:false},
+    {z:'Rhino (Vertical Tip)',cic:'9-12 mois',bijou:'Barbell courbé',diff:'★★★★☆',rejet:false},
+    {z:'Nasallang',cic:'6-12 mois',bijou:'Barbell droit',diff:'★★★★★',rejet:false},
+    {z:'Third Eye (3e oeil)',cic:'6+ mois',bijou:'Barbell courbé',diff:'★★★☆☆',rejet:true,morpho:true},
+  ],
+  bouche: [
+    {z:'Labret classique',cic:'6-8 sem.',bijou:'Labret droit',diff:'★☆☆☆☆',rejet:false},
+    {z:'Labret décalé',cic:'6-8 sem.',bijou:'Labret droit',diff:'★☆☆☆☆',rejet:false},
+    {z:'Labret vertical',cic:'6-9 mois',bijou:'Barbell courbé',diff:'★★☆☆☆',rejet:false},
+    {z:'Ashley',cic:'6-9 mois',bijou:'Labret plat (Flatback)',diff:'★★☆☆☆',rejet:false},
+    {z:'Médusa (Philtrum)',cic:'6-9 mois',bijou:'Labret droit',diff:'★☆☆☆☆',rejet:false},
+    {z:'Jestrum',cic:'6-9 mois',bijou:'Barbell courbé',diff:'★★★☆☆',rejet:false},
+    {z:'Monroe (gauche)',cic:'8-10 sem.',bijou:'Labret droit',diff:'★☆☆☆☆',rejet:false},
+    {z:'Madonna (droite)',cic:'8-10 sem.',bijou:'Labret droit',diff:'★☆☆☆☆',rejet:false},
+    {z:'Dahlia / Joue',cic:'6-9 mois',bijou:'Labret droit long',diff:'★★★☆☆',rejet:false,morpho:true},
+    {z:'Labret horizontal',cic:'6-9 mois',bijou:'Barbell droit',diff:'★★★☆☆',rejet:false},
+    {z:'Snake Bites (x2)',cic:'6-8 sem.',bijou:'2 labrets décalés',diff:'★★☆☆☆',rejet:false},
+    {z:'Angel Bites (x2)',cic:'8-10 sem.',bijou:'2 labrets droits',diff:'★★☆☆☆',rejet:false},
+    {z:'Cyber Bites (x2)',cic:'6-9 mois',bijou:'Labret + Médusa',diff:'★★☆☆☆',rejet:false},
+    {z:'Langue (Midline)',cic:'4-6 sem.',bijou:'Barbell droit long',diff:'★☆☆☆☆',rejet:false},
+    {z:'Langue latérale',cic:'4-6 sem.',bijou:'Barbell droit',diff:'★★☆☆☆',rejet:false},
+    {z:'Venom / Double langue',cic:'4-6 sem.',bijou:'2 barbells droits',diff:'★★★☆☆',rejet:false},
+    {z:'Snake Eyes (langue)',cic:'4-6 sem.',bijou:'Barbell courbé',diff:'★★★★☆',rejet:true},
+    {z:'Tongue Web (Frénulum)',cic:'4 sem.',bijou:'Anneau / Barbell courbé',diff:'★★☆☆☆',rejet:false,morpho:true},
+    {z:'Smiley (Frein sup.)',cic:'4-8 sem.',bijou:'Anneau / Fer à cheval',diff:'★☆☆☆☆',rejet:false,morpho:true},
+    {z:'Frowny (Frein inf.)',cic:'4 sem.',bijou:'Anneau / Fer à cheval',diff:'★☆☆☆☆',rejet:false,morpho:true},
+  ],
+  nombril: [
+    {z:'Nombril supérieur',cic:'3-6 mois',bijou:'Bananabell 14G (9,5-11mm)',diff:'★☆☆☆☆',rejet:false},
+    {z:'Nombril inversé',cic:'6-12 mois',bijou:'Bananabell inversé 14G',diff:'★★☆☆☆',rejet:true},
+    {z:'Nombril flottant',cic:'6-9 mois',bijou:'Bananabell spécial',diff:'★★☆☆☆',rejet:true},
+    {z:'Double nombril',cic:'6-12 mois',bijou:'2 bananabells',diff:'★★☆☆☆',rejet:true},
+    {z:'Nombril de surface / Ancre',cic:'9-18 mois',bijou:'Ancre / Skin Diver',diff:'★★★☆☆',rejet:true},
+  ],
+  mamelons: [
+    {z:'Mamelon horizontal',cic:'9-12 mois',bijou:'Barbell droit 14G',diff:'★★☆☆☆',rejet:false},
+    {z:'Mamelon vertical',cic:'9-12 mois',bijou:'Barbell droit 14G',diff:'★★☆☆☆',rejet:false},
+    {z:'Mamelon diagonal',cic:'9-12 mois',bijou:'Barbell droit 14G',diff:'★★★☆☆',rejet:false},
+    {z:'Double mamelon (croix)',cic:'9-12 mois',bijou:'2 barbells 14G',diff:'★★★★☆',rejet:false,morpho:true},
+  ],
+  arcade: [
+    {z:'Arcade sourcilière',cic:'6-9 mois',bijou:'Bananabell 1,2mm / BCR',diff:'★★☆☆☆',rejet:true},
+    {z:'Arcade horizontale',cic:'6-9 mois',bijou:'Barbell courbé 1,2mm',diff:'★★★☆☆',rejet:true},
+    {z:'Anti-eyebrow (sous oeil)',cic:'6-9 mois',bijou:'Barbell courbé / agrafe',diff:'★★★☆☆',rejet:true},
+    {z:'Teardrop / Larme (dermal)',cic:'9-18 mois',bijou:'Ancre microdermale',diff:'★★★☆☆',rejet:true},
+  ],
+  surface: [
+    {z:'Microdermal',cic:'1-3 mois',bijou:'Ancre plate (pied + tête)',diff:'★★★☆☆',rejet:true},
+    {z:'Skin Diver',cic:'1-3 mois',bijou:'Implant Skin Diver',diff:'★★★☆☆',rejet:true},
+    {z:'Surface — Hanche',cic:'9-18 mois',bijou:'Agrafe / Staple bar',diff:'★★★☆☆',rejet:true},
+    {z:'Surface — Nuque',cic:'9-18 mois',bijou:'Barbell courbé 1,6mm',diff:'★★★★☆',rejet:true},
+    {z:'Surface — Sternum',cic:'9-18 mois',bijou:'Agrafe / Barbell de surface',diff:'★★★☆☆',rejet:true},
+    {z:'Surface — Ventre',cic:'9-18 mois',bijou:'Skin Diver / Ancre',diff:'★★★☆☆',rejet:true},
+  ]
+};
+
+// Conseils post-soin par type (issus des fiches Word)
+const conseilsParType = {
+  oreilles: '✔ Nettoyer 2×/jour au sérum NaCl 0,9% · Sécher en tapotant · ✗ Ne pas tourner le bijou · Éviter alcool/bétadine · Attacher les cheveux longs · Nettoyer casque/téléphone avant contact',
+  nez: '✔ Nettoyer 2×/jour NaCl 0,9% · Compresse stérile · ✗ Éviter fond de teint à 2cm · Éviter piscine/mer · Rincer après sport · Septum : peut se retourner une fois cicatrisé',
+  bouche: '✔ Bain de bouche SANS alcool après chaque repas · Nettoyer l\'extérieur au NaCl · ✗ Éviter alcool, tabac, aliments épicés 2-3 semaines · Bijou court obligatoire vers J10-J14 (labret)',
+  nombril: '✔ NaCl 0,9% spray 2×/j + compresse · Laisser sécher à l\'air · ✗ Éviter piscine/mer/bain · Éviter jeans taille haute et ceintures · Grossesse : retirer au 6e mois',
+  mamelons: '✔ NaCl 0,9% 2×/j · Soutien-gorge coton de maintien · ✗ Sports de contact 3 mois · Pas de soutien-gorge synthétique · Allaitement : retirer DÉFINITIVEMENT le bijou',
+  arcade: '✔ NaCl 0,9% 2×/j · Observer quotidiennement la migration · ✗ Aucun cosmétique dans la zone · Vérifier lunettes · Suivi renforcé toutes les 2 semaines (anti-eyebrow)',
+  surface: '✔ NaCl 0,9% 2×/j · Couvrir avec Tégesimal si frottement · ✗ Éviter frottements vêtements/bijoux · Tout retrait de dermal par un professionnel uniquement'
+};
+
+function selectSoinType(el){
+  document.querySelectorAll('[data-stype]').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  const type = el.dataset.stype;
+  // Mettre à jour le sélecteur de zone
+  const sel = document.getElementById('s_zone');
+  const zones = soinZonesData[type]||[];
+  sel.innerHTML = zones.map(z=>`<option value="${z.z}">${z.z} — ${z.cic}</option>`).join('');
+  updateSoinInfo();
+  // Afficher les conseils
+  const conseil = document.getElementById('conseilsZone');
+  if(conseilsParType[type]){
+    conseil.textContent = conseilsParType[type];
+    conseil.style.display='block';
+  } else {
+    conseil.style.display='none';
+  }
+}
+
+function updateZones(){
+  // compatibilité ancienne fonction
+  const el = document.querySelector('[data-stype].selected');
+  if(el) selectSoinType(el);
+}
+
+function updateSoinInfo(){
+  const typeEl = document.querySelector('[data-stype].selected');
+  if(!typeEl) return;
+  const type = typeEl.dataset.stype;
+  const zoneName = document.getElementById('s_zone').value.split(' — ')[0];
+  const zones = soinZonesData[type]||[];
+  const info = zones.find(z=>z.z===zoneName);
+  const div = document.getElementById('soinInfoZone');
+  if(info){
+    let html = `<strong style="color:var(--gold)">${info.z}</strong> · Cicatrisation : <strong>${info.cic}</strong> · Bijou 1ère pose : ${info.bijou} · Difficulté : ${info.diff}`;
+    if(info.rejet) html += ` · <span style="color:#e74c3c;">⚠ Risque de rejet — informer le client</span>`;
+    if(info.morpho) html += ` · <span style="color:#f39c12;">⚠ Évaluation morphologique requise</span>`;
+    div.innerHTML = html;
+    div.style.display='block';
+    // Pré-remplir le bijou suggéré
+    const bijouSel = document.getElementById('s_bijou_type');
+    if(bijouSel && info.bijou){
+      // Trouver le bijou le plus proche dans la liste
+      const mapping = {
+        'Anneau':'Anneau BCR','BCR':'Anneau BCR','Stud':'Labret droit',
+        'Barbell droit':'Barbell droit','Barbell courbé':'Barbell courbé (Bananabell)',
+        'Bananabell':'Barbell courbé (Bananabell)','Labret plat':'Labret plat (Flatback)',
+        'Labret':'Labret droit','Ancre':'Ancre microdermale','Skin Diver':'Skin Diver',
+        'Agrafe':'Agrafe (Staple bar)','Fer à cheval':'Fer à cheval'
+      };
+      for(const [k,v] of Object.entries(mapping)){
+        if(info.bijou.includes(k)){
+          for(let i=0;i<bijouSel.options.length;i++){
+            if(bijouSel.options[i].value===v){bijouSel.selectedIndex=i;break;}
+          }
+          break;
+        }
+      }
+    }
+  } else {
+    div.style.display='none';
+  }
+}
+
+function renderSoins(){
+  const body = document.getElementById('soinsTableBody');
+  if(!DB.soins.length){
+    body.innerHTML='<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text3);">Aucune fiche de soin enregistrée.</td></tr>';
+    return;
+  }
+  body.innerHTML = [...DB.soins].reverse().map(s=>{
+    const c = DB.clients.find(x=>x.id===s.clientId);
+    const nom = c?c.prenom+' '+c.nom:'—';
+    const avant = JSON.parse(s.photosAvant||'[]');
+    const apres = JSON.parse(s.photosApres||'[]');
+    const totalPh = avant.length+apres.length;
+    return `<tr>
+      <td><span class="name">${nom}</span></td>
+      <td>${soinIcons[s.type]||'🩺'} ${soinLabels[s.type]||s.type}</td>
+      <td style="color:var(--text3)">${s.zone}</td>
+      <td>${formatDate(s.date)}</td>
+      <td>${totalPh?`<span class="badge badge-soin">📸 ${totalPh}</span>`:'—'}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="openFicheClient('${s.clientId}')">Voir fiche</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
+// FICHE CLIENT DETAIL
+// ═══════════════════════════════════════════
+function openFicheClient(id){
+  const c = DB.clients.find(x=>x.id===id);
+  if(!c) return;
+  const soins = DB.soins.filter(s=>s.clientId===id);
+  const quests = DB.questionnaires.filter(q=>q.clientId===id);
+  const autos = DB.autorisations.filter(a=>a.clientId===id);
+
+  const photosHtml = (c.photos||[]).map(p=>`<img class="photo-thumb" src="${p}" onclick="openLightbox('${p}')" alt="">`).join('');
+
+  const soinsHtml = soins.length ? soins.map(s=>{
+    const av = JSON.parse(s.photosAvant||'[]');
+    const ap = JSON.parse(s.photosApres||'[]');
+    const phHtml = [...av.map(p=>`<img class="photo-thumb" src="${p}" onclick="openLightbox('${p}')" alt="avant">`),
+                    ...ap.map(p=>`<img class="photo-thumb" src="${p}" onclick="openLightbox('${p}')" alt="après">`)].join('');
+    return `<div class="record-item">
+      <div class="record-dot"></div>
+      <div class="record-content">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+          <div class="record-title">${soinIcons[s.type]||'🩺'} ${soinLabels[s.type]||s.type} — ${s.zone}</div>
+          <button class="print-btn print-btn-blue" onclick="printSoin('${s.id}')">🖨️ Imprimer</button>
+        </div>
+        <div class="record-meta">📅 ${formatDate(s.date)} · ${s.bijou||''} ${s.calibre?s.calibre+'mm':''} · ${s.materiau||''} · ${s.deroulement||''}</div>
+        ${phHtml?`<div class="record-photos">${phHtml}</div>`:''}
+        ${s.obs?`<div style="font-size:11px;color:var(--text3);margin-top:6px;">📝 ${s.obs}</div>`:''}
+        ${s.rdv?`<div style="font-size:11px;color:var(--gold);margin-top:4px;">📅 Prochain RDV : ${formatDate(s.rdv)}</div>`:''}
+      </div>
+    </div>`;
+  }).join('') : '<div style="text-align:center;padding:30px;color:var(--text3);">Aucun soin enregistré pour ce client.</div>';
+
+  const questHtml = quests.length ? quests.map(q=>`
+    <div class="record-item">
+      <div class="record-dot" style="background:${q.type==='mineur'?'#e74c3c':'#5dade2'}"></div>
+      <div class="record-content">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+          <div class="record-title">Questionnaire ${q.type==='mineur'?'Mineur':'Majeur'}</div>
+          <button class="print-btn print-btn-blue" onclick="printQuestionnaire('${q.id}')">🖨️ Imprimer</button>
+        </div>
+        <div class="record-meta">📅 ${formatDate(q.date)} · Zone : ${q.zone||'—'} · Allergies : ${(q.allergies&&q.allergies.length)?q.allergies.join(', '):'Aucune'}</div>
+        ${q.infos?`<div style="font-size:11px;color:var(--text3);margin-top:4px;">📝 ${q.infos}</div>`:''}
+      </div>
+    </div>`).join('') : '<div style="text-align:center;padding:30px;color:var(--text3);">Aucun questionnaire.</div>';
+
+  const autoHtml = autos.length ? autos.map(a=>`
+    <div class="record-item">
+      <div class="record-dot" style="background:${a.type==='parentale'?'#e67e22':'#27ae60'}"></div>
+      <div class="record-content">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+          <div class="record-title">${a.type==='parentale'?'✍️ Autorisation parentale':'🔒 Engagement confidentialité'}</div>
+          <button class="print-btn print-btn-green" onclick="printAutorisation('${a.id}')">🖨️ Imprimer</button>
+        </div>
+        <div class="record-meta">📅 ${formatDate(a.date)} ${a.parentNom?'· Parent : '+a.parentNom:''}</div>
+        <div style="margin-top:6px;"><span class="badge ${a.signature?'badge-active':'badge-archive'}">${a.signature?'✓ Signé':'Non signé'}</span></div>
+      </div>
+    </div>`).join('') : '<div style="text-align:center;padding:30px;color:var(--text3);">Aucune autorisation.</div>';
+
+  const ageStr = c.dob ? `${age(c.dob)} ans` : '';
+
+  document.getElementById('ficheClientContent').innerHTML = `
+    <div style="margin-bottom:16px;">
+      <button class="btn btn-ghost btn-sm" onclick="showView('clients',null);document.querySelectorAll('.nav-item')[1].classList.add('active')">← Retour</button>
+    </div>
+    <div class="client-header">
+      <div class="client-avatar-lg">${(c.photos||[]).length?`<img src="${c.photos[0]}" alt="">`:`${initials(c)}`}</div>
+      <div class="client-info">
+        <div class="client-name">${c.prenom} ${c.nom}</div>
+        <div class="client-meta">
+          ${c.dob?`<span>🎂 ${formatDate(c.dob)} (${ageStr})</span>`:''}
+          ${c.tel?`<span>📞 ${c.tel}</span>`:''}
+          ${c.email?`<span>✉️ ${c.email}</span>`:''}
+          <span>🪪 N° ${c.id}</span>
+          ${clientBadge(c)}
+        </div>
+        <div class="client-actions">
+          <button class="btn btn-gold btn-sm" onclick="openSoinModal('${c.id}')">+ Fiche de soin</button>
+          <button class="btn btn-ghost btn-sm" onclick="openQuestModal('${c.id}')">+ Questionnaire</button>
+          <button class="btn btn-ghost btn-sm" onclick="openAutoModal('${c.id}')">+ Autorisation</button>
+          <button class="btn btn-ghost btn-sm" onclick="showView('jotform',null)" style="color:#ff8c42;border-color:rgba(255,106,0,0.25);">📝 JotForm</button>
+          <button class="print-btn print-btn-blue" onclick="openPrintModal('${c.id}')">🖨️ Imprimer / PDF</button>
+          ${c.statut!=='archive'?`<button class="btn btn-danger btn-sm" onclick="archiveClient('${c.id}');showView('clients',null)">Archiver</button>`:'<button class="btn btn-ghost btn-sm" onclick="restoreClient(\''+c.id+'\')">Restaurer</button>'}
+        </div>
+      </div>
+    </div>
+    ${photosHtml?`<div style="margin-bottom:20px;"><div class="section-title">Photos</div><div class="photo-preview">${photosHtml}</div></div>`:''}
+    ${c.notes?`<div class="record-item" style="margin-bottom:20px;"><div class="record-dot" style="background:var(--gold)"></div><div class="record-content"><div class="record-title">Notes</div><div class="record-meta">${c.notes}</div></div></div>`:''}
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab(this,'tabSoins')">🩺 Soins (${soins.length})</button>
+      <button class="tab" onclick="switchTab(this,'tabQuest')">📋 Médical (${quests.length})</button>
+      <button class="tab" onclick="switchTab(this,'tabAuto')">✍️ Docs (${autos.length})</button>
+    </div>
+    <div id="tabSoins">${soinsHtml}</div>
+    <div id="tabQuest" style="display:none">${questHtml}</div>
+    <div id="tabAuto" style="display:none">${autoHtml}</div>
+  `;
+
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-ficheClient').classList.add('active');
+  document.getElementById('topbarTitle').textContent = c.prenom+' '+c.nom;
+  currentView = 'ficheClient';
+}
+
+function switchTab(btn, tabId){
+  btn.closest('.tabs').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  ['tabSoins','tabQuest','tabAuto'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.style.display = id===tabId?'block':'none';
+  });
+}
+
+// ═══════════════════════════════════════════
+// MODALS
+// ═══════════════════════════════════════════
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+function openNewClientModal(){
+  ['nc_prenom','nc_nom','nc_email','nc_tel','nc_adresse','nc_urg_nom','nc_urg_tel','nc_notes'].forEach(id=>{
+    document.getElementById(id).value='';
+  });
+  document.getElementById('nc_dob').value='';
+  document.getElementById('nc_genre').value='';
+  document.getElementById('nc_statut').value='actif';
+  document.getElementById('nc_photos').value='[]';
+  document.getElementById('ncPhotoPreviews').innerHTML='';
+  openModal('modalNewClient');
+}
+
+function openQuestModal(clientId){
+  populateClientSelect('q_client', clientId);
+  document.getElementById('q_date').value = today();
+  ['q_nom','q_prenom','q_age','q_adresse','q_cp_ville','q_tel_mineur',
+   'q_num_piece','q_bijou','q_zones_exist','q_medecin','q_traitement_detail',
+   'q_cheloides_zone','q_all_autres','q_infos'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('q_dob').value='';
+  ['q_piece_id','q_zone','q_premier','q_suivi','q_traitement','q_cheloides'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.selectedIndex=0;
+  });
+  document.querySelectorAll('#qAllergies input[type=checkbox]').forEach(cb=>cb.checked=false);
+  // reset type selector
+  document.querySelectorAll('[data-qtype]').forEach(c=>c.classList.remove('selected'));
+  const first = document.querySelector('[data-qtype="mineur"]');
+  if(first) first.classList.add('selected');
+  clearSig('sigPadQuest'); clearSig('sigPadQuest2'); clearSig('sigPadPierceur');
+  openModal('modalQuestionnaire');
+}
+
+function openAutoModal(clientId){
+  populateClientSelect('a_client', clientId);
+  document.getElementById('a_date').value = today();
+  clearSig('sigPadAuto');
+  document.getElementById('a_photos').value='[]';
+  document.getElementById('autoPhotoPrev').innerHTML='';
+  openModal('modalAutorisation');
+}
+
+function openSoinModal(clientId){
+  populateClientSelect('s_client', clientId);
+  document.getElementById('s_date').value = today();
+  ['s_praticien','s_longueur','s_bijou_detail','s_obs','s_rdv'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('s_photos_avant').value='[]';
+  document.getElementById('s_photos_apres').value='[]';
+  document.getElementById('soinAvantPrev').innerHTML='';
+  document.getElementById('soinApresPrev').innerHTML='';
+  // reset type selector to oreilles
+  document.querySelectorAll('[data-stype]').forEach(c=>c.classList.remove('selected'));
+  const first = document.querySelector('[data-stype="oreilles"]');
+  if(first){ first.classList.add('selected'); selectSoinType(first); }
+  clearSig('sigPadSoin');
+  openModal('modalSoin');
+}
+
+function populateClientSelect(selId, preselect){
+  const sel = document.getElementById(selId);
+  sel.innerHTML = '<option value="">— Sélectionner un client —</option>' +
+    DB.clients.filter(c=>c.statut!=='archive').map(c=>
+      `<option value="${c.id}" ${c.id===preselect?'selected':''}>${c.prenom} ${c.nom}</option>`
+    ).join('');
+}
+
+function today(){return new Date().toISOString().split('T')[0];}
+
+// ═══════════════════════════════════════════
+// SAVE FUNCTIONS
+// ═══════════════════════════════════════════
+function saveNewClient(){
+  const prenom = document.getElementById('nc_prenom').value.trim();
+  const nom = document.getElementById('nc_nom').value.trim();
+  if(!prenom||!nom){alert('Prénom et nom sont requis.');return;}
+  const client = {
+    id: uid(),
+    prenom, nom,
+    dob: document.getElementById('nc_dob').value,
+    genre: document.getElementById('nc_genre').value,
+    statut: document.getElementById('nc_statut').value,
+    tel: document.getElementById('nc_tel').value,
+    email: document.getElementById('nc_email').value,
+    adresse: document.getElementById('nc_adresse').value,
+    urgNom: document.getElementById('nc_urg_nom').value,
+    urgTel: document.getElementById('nc_urg_tel').value,
+    notes: document.getElementById('nc_notes').value,
+    photos: JSON.parse(document.getElementById('nc_photos').value),
+    dateCreation: today()
+  };
+  DB.clients.push(client);
+  saveDB(); closeModal('modalNewClient');
+  updateStats(); renderDashboard();
+  toast('Client '+prenom+' '+nom+' créé ✓');
+  openFicheClient(client.id);
+}
+
+function selectQType(el){
+  document.querySelectorAll('[data-qtype]').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function saveQuestionnaire(){
+  const cid = document.getElementById('q_client').value;
+  if(!cid){alert('Sélectionnez un client.');return;}
+  const qtype = document.querySelector('[data-qtype].selected');
+  const type = qtype ? qtype.dataset.qtype : 'mineur';
+  const sig1 = getSigData('sigPadQuest');
+  const sig2 = getSigData('sigPadQuest2');
+  const sigP = getSigData('sigPadPierceur');
+  const allergies = [...document.querySelectorAll('#qAllergies input:checked')].map(i=>i.value);
+  const autresAllergies = document.getElementById('q_all_autres').value;
+  DB.questionnaires.push({
+    id:'Q'+Date.now(), clientId:cid, type,
+    date: document.getElementById('q_date').value,
+    nom: document.getElementById('q_nom').value,
+    prenom: document.getElementById('q_prenom').value,
+    dob: document.getElementById('q_dob').value,
+    age: document.getElementById('q_age').value,
+    adresse: document.getElementById('q_adresse').value,
+    cpVille: document.getElementById('q_cp_ville').value,
+    telMineur: document.getElementById('q_tel_mineur').value,
+    pieceId: document.getElementById('q_piece_id').value,
+    numPiece: document.getElementById('q_num_piece').value,
+    zone: document.getElementById('q_zone').value,
+    bijou: document.getElementById('q_bijou').value,
+    premier: document.getElementById('q_premier').value,
+    zonesExist: document.getElementById('q_zones_exist').value,
+    suivi: document.getElementById('q_suivi').value,
+    medecin: document.getElementById('q_medecin').value,
+    traitement: document.getElementById('q_traitement').value,
+    traitementDetail: document.getElementById('q_traitement_detail').value,
+    allergies, autresAllergies,
+    cheloides: document.getElementById('q_cheloides').value,
+    cheloideZone: document.getElementById('q_cheloides_zone').value,
+    infos: document.getElementById('q_infos').value,
+    signature1: sig1, signature2: sig2, signaturePierceur: sigP
+  });
+  saveDB(); closeModal('modalQuestionnaire');
+  toast('Questionnaire enregistré ✓');
+  refreshView(currentView);
+}
+
+function saveAutorisation(){
+  const cid = document.getElementById('a_client').value;
+  if(!cid){alert('Sélectionnez un client.');return;}
+  const type = document.querySelector('.form-type-card.selected').dataset.type;
+  const sig = getSigData('sigPadAuto');
+  const zones = [...document.querySelectorAll('#autoZones input:checked')].map(i=>i.value);
+  DB.autorisations.push({
+    id:'A'+Date.now(), clientId:cid, type,
+    date: document.getElementById('a_date').value,
+    parentNom: document.getElementById('a_parent_nom').value,
+    parentTel: document.getElementById('a_parent_tel').value,
+    lien: document.getElementById('a_lien').value,
+    zones, signature: sig,
+    photos: JSON.parse(document.getElementById('a_photos').value)
+  });
+  saveDB(); closeModal('modalAutorisation');
+  toast('Document enregistré ✓');
+  refreshView(currentView);
+}
+
+function saveSoin(){
+  const cid = document.getElementById('s_client').value;
+  if(!cid){alert('Sélectionnez un client.');return;}
+  const typeEl = document.querySelector('[data-stype].selected');
+  const type = typeEl ? typeEl.dataset.stype : 'oreilles';
+  const sig = getSigData('sigPadSoin');
+  DB.soins.push({
+    id:'S'+Date.now(), clientId:cid, type,
+    zone: document.getElementById('s_zone').value.split(' — ')[0],
+    date: document.getElementById('s_date').value,
+    praticien: document.getElementById('s_praticien').value,
+    bijouType: document.getElementById('s_bijou_type').value,
+    calibre: document.getElementById('s_calibre').value,
+    longueur: document.getElementById('s_longueur').value,
+    materiau: document.getElementById('s_materiau').value,
+    bijouDetail: document.getElementById('s_bijou_detail').value,
+    saignement: document.getElementById('s_saignement').value,
+    deroulement: document.getElementById('s_deroulement').value,
+    douleur: document.getElementById('s_douleur').value,
+    morpho: document.getElementById('s_morpho').value,
+    rejet: document.getElementById('s_rejet').value,
+    conseilsRemis: document.getElementById('s_conseils_remis').value,
+    rdv: document.getElementById('s_rdv').value,
+    obs: document.getElementById('s_obs').value,
+    photosAvant: document.getElementById('s_photos_avant').value,
+    photosApres: document.getElementById('s_photos_apres').value,
+    signature: sig
+  });
+  saveDB(); closeModal('modalSoin');
+  toast('Fiche de soin enregistrée ✓');
+  refreshView(currentView);
+}
+
+function selectAutoType(el){
+  document.querySelectorAll('.form-type-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+// ═══════════════════════════════════════════
+// PHOTOS
+// ═══════════════════════════════════════════
+function handlePhotoUpload(input, previewId, hiddenId){
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const data = e.target.result;
+    const arr = JSON.parse(document.getElementById(hiddenId).value||'[]');
+    arr.push(data);
+    document.getElementById(hiddenId).value = JSON.stringify(arr);
+    const img = document.createElement('img');
+    img.className = 'photo-thumb';
+    img.src = data;
+    img.onclick = ()=>openLightbox(data);
+    document.getElementById(previewId).appendChild(img);
+  };
+  reader.readAsDataURL(file);
+}
+
+function openLightbox(src){
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox(){document.getElementById('lightbox').classList.remove('open');}
+
+// ═══════════════════════════════════════════
+// SIGNATURE PAD
+// ═══════════════════════════════════════════
+const sigPads = {};
+function initSigPad(id){
+  const canvas = document.getElementById(id);
+  if(!canvas||sigPads[id]) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth||600;
+  canvas.height = 140;
+  let drawing=false;
+  function getPos(e){
+    const r = canvas.getBoundingClientRect();
+    const t = e.touches?e.touches[0]:e;
+    return {x:(t.clientX-r.left)*(canvas.width/r.width), y:(t.clientY-r.top)*(canvas.height/r.height)};
+  }
+  canvas.addEventListener('mousedown',e=>{drawing=true;const p=getPos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);});
+  canvas.addEventListener('mousemove',e=>{if(!drawing)return;const p=getPos(e);ctx.lineWidth=2;ctx.strokeStyle='rgba(200,169,110,0.9)';ctx.lineCap='round';ctx.lineTo(p.x,p.y);ctx.stroke();});
+  canvas.addEventListener('mouseup',()=>drawing=false);
+  canvas.addEventListener('mouseleave',()=>drawing=false);
+  canvas.addEventListener('touchstart',e=>{e.preventDefault();drawing=true;const p=getPos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);},{passive:false});
+  canvas.addEventListener('touchmove',e=>{e.preventDefault();if(!drawing)return;const p=getPos(e);ctx.lineWidth=2.5;ctx.strokeStyle='rgba(200,169,110,0.9)';ctx.lineCap='round';ctx.lineTo(p.x,p.y);ctx.stroke();},{passive:false});
+  canvas.addEventListener('touchend',()=>drawing=false);
+  sigPads[id]=true;
+}
+function clearSig(id){
+  const canvas = document.getElementById(id);
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+}
+function getSigData(id){
+  const canvas = document.getElementById(id);
+  if(!canvas) return null;
+  return canvas.toDataURL();
+}
+// Init sig pads on open
+document.querySelectorAll('.modal-overlay').forEach(m=>{
+  const observer = new MutationObserver(()=>{
+    if(m.classList.contains('open')){
+      m.querySelectorAll('canvas.sig-pad').forEach(c=>initSigPad(c.id));
+    }
+  });
+  observer.observe(m,{attributes:true,attributeFilter:['class']});
+});
+
+// ═══════════════════════════════════════════
+// SEARCH
+// ═══════════════════════════════════════════
+function globalSearch(){
+  if(currentView==='clients') renderClients();
+  else if(currentView==='dashboard') renderDashboard();
+}
+
+// ═══════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════
+function toast(msg){
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ═══════════════════════════════════════════
+// IMPRESSION & PDF
+// ═══════════════════════════════════════════
+const STUDIO = 'Société Intemporelle';
+
+function openPrintModal(clientId){
+  const c = DB.clients.find(x=>x.id===clientId);
+  if(!c) return;
+  const quests = DB.questionnaires.filter(q=>q.clientId===clientId);
+  const autos  = DB.autorisations.filter(a=>a.clientId===clientId);
+  const soins  = DB.soins.filter(s=>s.clientId===clientId);
+
+  const choices = document.getElementById('printChoices');
+  choices.innerHTML = `
+    <button class="btn btn-ghost" style="justify-content:flex-start;gap:12px;padding:12px 16px;" onclick="printFicheClient('${clientId}')">
+      <span style="font-size:20px;">👤</span>
+      <div style="text-align:left;">
+        <div style="font-weight:500;color:var(--text);">Fiche Client complète</div>
+        <div style="font-size:11px;color:var(--text3);">Coordonnées, statut, soins réalisés</div>
+      </div>
+      <span style="margin-left:auto;font-size:11px;color:var(--gold);">🖨️ Imprimer</span>
+    </button>
+    ${quests.map((q,i)=>`
+    <button class="btn btn-ghost" style="justify-content:flex-start;gap:12px;padding:12px 16px;" onclick="printQuestionnaire('${q.id}')">
+      <span style="font-size:20px;">📋</span>
+      <div style="text-align:left;">
+        <div style="font-weight:500;color:var(--text);">Questionnaire Médical ${q.type==='mineur'?'Mineur':'Majeur'}</div>
+        <div style="font-size:11px;color:var(--text3);">Du ${formatDate(q.date)} · Zone : ${q.zone||'—'}</div>
+      </div>
+      <span style="margin-left:auto;font-size:11px;color:var(--gold);">🖨️ Imprimer</span>
+    </button>`).join('')}
+    ${autos.map(a=>`
+    <button class="btn btn-ghost" style="justify-content:flex-start;gap:12px;padding:12px 16px;" onclick="printAutorisation('${a.id}')">
+      <span style="font-size:20px;">${a.type==='parentale'?'✍️':'🔒'}</span>
+      <div style="text-align:left;">
+        <div style="font-weight:500;color:var(--text);">${a.type==='parentale'?'Autorisation Parentale':'Engagement de Confidentialité'}</div>
+        <div style="font-size:11px;color:var(--text3);">Du ${formatDate(a.date)}</div>
+      </div>
+      <span style="margin-left:auto;font-size:11px;color:var(--gold);">🖨️ Imprimer</span>
+    </button>`).join('')}
+    ${soins.map(s=>`
+    <button class="btn btn-ghost" style="justify-content:flex-start;gap:12px;padding:12px 16px;" onclick="printSoin('${s.id}')">
+      <span style="font-size:20px;">${soinIcons[s.type]||'🩺'}</span>
+      <div style="text-align:left;">
+        <div style="font-weight:500;color:var(--text);">Fiche Soins — ${soinLabels[s.type]||s.type}</div>
+        <div style="font-size:11px;color:var(--text3);">Zone : ${s.zone} · Du ${formatDate(s.date)}</div>
+      </div>
+      <span style="margin-left:auto;font-size:11px;color:var(--gold);">🖨️ Imprimer</span>
+    </button>`).join('')}
+  `;
+  openModal('modalPrint');
+}
+
+// ── Styles communs pour tous les documents imprimés
+function printHeader(titre, sous=''){
+  return `
+  <div style="text-align:center;border-bottom:2px solid #111;padding-bottom:14px;margin-bottom:20px;">
+    <div style="font-size:9pt;letter-spacing:3px;text-transform:uppercase;color:#888;margin-bottom:6px;">${STUDIO}</div>
+    <div style="font-size:20pt;font-weight:700;font-family:Georgia,serif;">${titre}</div>
+    ${sous?`<div style="font-size:10pt;color:#666;margin-top:4px;">${sous}</div>`:''}
+  </div>`;
+}
+function printRow(label, value){
+  return `<tr>
+    <td style="padding:7px 10px;font-weight:600;font-size:10pt;width:40%;border:1px solid #ddd;background:#f9f9f9;">${label}</td>
+    <td style="padding:7px 10px;font-size:10pt;border:1px solid #ddd;">${value||'—'}</td>
+  </tr>`;
+}
+function printTable(rows){
+  return `<table style="width:100%;border-collapse:collapse;margin-bottom:16px;">${rows}</table>`;
+}
+function printSection(titre){
+  return `<div style="font-size:9pt;letter-spacing:2px;text-transform:uppercase;color:#888;font-weight:700;margin:18px 0 8px;border-bottom:1px solid #eee;padding-bottom:5px;">${titre}</div>`;
+}
+function printSigBlock(label, sigData){
+  return `
+  <div style="flex:1;text-align:center;border:1px solid #ddd;border-radius:6px;padding:12px;">
+    <div style="font-size:9pt;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;margin-bottom:8px;">${label}</div>
+    ${sigData?`<img src="${sigData}" style="max-width:100%;height:70px;object-fit:contain;" alt="signature">`:'<div style="height:70px;border-bottom:1px solid #bbb;"></div>'}
+    <div style="font-size:8pt;color:#aaa;margin-top:6px;">Date : _____ / _____ / _______</div>
+  </div>`;
+}
+function doPrint(html){
+  const zone = document.getElementById('printZone');
+  zone.innerHTML = html;
+  zone.style.display = 'block';
+  setTimeout(()=>{ window.print(); zone.style.display='none'; }, 300);
+}
+
+// ── Fiche Client
+function printFicheClient(clientId){
+  closeModal('modalPrint');
+  const c = DB.clients.find(x=>x.id===clientId);
+  if(!c) return;
+  const soins = DB.soins.filter(s=>s.clientId===clientId);
+  const quests = DB.questionnaires.filter(q=>q.clientId===clientId);
+  const soinsListe = soins.map(s=>`${soinIcons[s.type]||''} ${soinLabels[s.type]||s.type} — ${s.zone} (${formatDate(s.date)})`).join('<br>') || '—';
+  const html = `
+    ${printHeader('Fiche Client', `N° ${c.id} · Créé le ${formatDate(c.dateCreation)}`)}
+    ${printSection('Identité')}
+    ${printTable(
+      printRow('Nom complet', `${c.prenom} ${c.nom}`) +
+      printRow('Date de naissance', c.dob?`${formatDate(c.dob)} (${age(c.dob)} ans)`:'—') +
+      printRow('Genre', c.genre||'—') +
+      printRow('Statut', c.statut==='mineur'?'Mineur':'Majeur / Actif')
+    )}
+    ${printSection('Coordonnées')}
+    ${printTable(
+      printRow('Téléphone', c.tel) +
+      printRow('Email', c.email) +
+      printRow('Adresse', c.adresse) +
+      printRow('Contact urgence', c.urgNom?`${c.urgNom} — ${c.urgTel}`:'—')
+    )}
+    ${printSection('Soins réalisés (${soins.length})')}
+    <div style="font-size:10pt;padding:8px;border:1px solid #ddd;border-radius:4px;">${soinsListe}</div>
+    ${c.notes?`${printSection('Notes')}<div style="font-size:10pt;padding:8px;border:1px solid #ddd;">${c.notes}</div>`:''}
+    <div style="margin-top:30px;font-size:8pt;color:#aaa;text-align:center;">Document confidentiel — ${STUDIO} · Imprimé le ${new Date().toLocaleDateString('fr-FR')}</div>
+  `;
+  doPrint(html);
+}
+
+// ── Questionnaire Médical
+function printQuestionnaire(qid){
+  closeModal('modalPrint');
+  const q = DB.questionnaires.find(x=>x.id===qid);
+  if(!q) return;
+  const c = DB.clients.find(x=>x.id===q.clientId);
+  const allergiesStr = (q.allergies&&q.allergies.length)?q.allergies.join(', ')+(q.autresAllergies?', '+q.autresAllergies:''):(q.autresAllergies||'Aucune');
+  const html = `
+    ${printHeader('Questionnaire Médical & Santé', q.type==='mineur'?'MINEUR — Moins de 18 ans':'MAJEUR — 18 ans et plus')}
+    ${printSection('1 · Identité du client')}
+    ${printTable(
+      printRow('Nom de famille', q.nom||(c?c.nom:'')) +
+      printRow('Prénom(s)', q.prenom||(c?c.prenom:'')) +
+      printRow('Date de naissance', formatDate(q.dob||c?.dob)) +
+      printRow('Âge', q.age?q.age+' ans':'—') +
+      printRow('Adresse', q.adresse) +
+      printRow('Code postal — Ville', q.cpVille) +
+      printRow('Téléphone', q.telMineur||c?.tel||'—') +
+      printRow('Pièce d\'identité', q.pieceId) +
+      printRow('Numéro de pièce', q.numPiece)
+    )}
+    ${printSection('2 · Zone à percer & bijou')}
+    ${printTable(
+      printRow('Zone à percer', q.zone) +
+      printRow('Type de bijou souhaité', q.bijou) +
+      printRow('Premier piercing ?', q.premier==='oui'?'Oui':'Non — Zones existantes : '+(q.zonesExist||'—'))
+    )}
+    ${printSection('3 · Informations médicales')}
+    ${printTable(
+      printRow('Suivi médical', q.suivi==='oui'?'Oui — '+(q.medecin||''):'Non') +
+      printRow('Traitements médicaux', q.traitement==='oui'?'Oui — '+(q.traitementDetail||''):'Aucun') +
+      printRow('Allergies connues', allergiesStr) +
+      printRow('Chéloïdes', q.cheloides==='oui'?'Oui — Zone : '+(q.cheloideZone||''):'Non') +
+      printRow('Informations complémentaires', q.infos||'—')
+    )}
+    ${printSection('4 · Signatures')}
+    <div style="display:flex;gap:12px;margin-top:8px;">
+      ${printSigBlock('Représentant n°1', q.signature1)}
+      ${printSigBlock('Représentant n°2 (optionnel)', q.signature2)}
+      ${printSigBlock('Pierceur(se) — '+STUDIO, q.signaturePierceur)}
+    </div>
+    <div style="margin-top:24px;font-size:8pt;color:#aaa;text-align:center;">Document confidentiel — ${STUDIO} · Imprimé le ${new Date().toLocaleDateString('fr-FR')}</div>
+  `;
+  doPrint(html);
+}
+
+// ── Autorisation Parentale / Confidentialité
+function printAutorisation(aid){
+  closeModal('modalPrint');
+  const a = DB.autorisations.find(x=>x.id===aid);
+  if(!a) return;
+  const c = DB.clients.find(x=>x.id===a.clientId);
+  const titre = a.type==='parentale'?'Autorisation Parentale':'Engagement de Confidentialité';
+  const zonesStr = (a.zones||[]).join(', ')||'—';
+  const html = `
+    ${printHeader(titre, c?`${c.prenom} ${c.nom} — ${formatDate(a.date)}`:'')}
+    ${a.type==='parentale'?`
+      ${printSection('Informations du parent / tuteur légal')}
+      ${printTable(
+        printRow('Nom complet', a.parentNom) +
+        printRow('Lien de parenté', a.lien) +
+        printRow('Téléphone', a.parentTel)
+      )}
+      ${printSection('Mineur concerné')}
+      ${printTable(
+        printRow('Nom du mineur', c?`${c.prenom} ${c.nom}`:'—') +
+        printRow('Date de naissance', c?formatDate(c.dob):'—') +
+        printRow('Zones de piercing autorisées', zonesStr)
+      )}
+      <div style="margin:16px 0;padding:12px;border:1px solid #ddd;border-radius:4px;font-size:10pt;line-height:1.7;">
+        Je soussigné(e), <strong>${a.parentNom||'___________________'}</strong>, en qualité de <strong>${a.lien||'représentant légal'}</strong>, 
+        autorise mon enfant / le mineur <strong>${c?c.prenom+' '+c.nom:'___________________'}</strong> à se faire réaliser un piercing 
+        sur la ou les zones suivantes : <strong>${zonesStr}</strong>.<br><br>
+        Je certifie avoir pris connaissance des informations relatives aux soins, aux risques et aux contre-indications, 
+        et je m'engage à fournir des informations médicales exactes et complètes.
+      </div>
+    `:`
+      <div style="margin:16px 0;padding:12px;border:1px solid #ddd;border-radius:4px;font-size:10pt;line-height:1.8;">
+        Je soussigné(e), <strong>${c?c.prenom+' '+c.nom:'___________________'}</strong>, reconnais avoir été informé(e) que les données 
+        personnelles collectées dans ce formulaire sont traitées dans le cadre de la gestion de mon dossier client par <strong>${STUDIO}</strong>.<br><br>
+        Ces données sont conservées de manière sécurisée et ne sont pas transmises à des tiers sans mon consentement.
+        Conformément au RGPD, je dispose d'un droit d'accès, de rectification et de suppression de mes données.
+      </div>
+    `}
+    ${printSection('Signature')}
+    <div style="display:flex;gap:12px;margin-top:8px;">
+      ${printSigBlock(a.type==='parentale'?'Signature du parent / tuteur':'Signature du client', a.signature)}
+      ${printSigBlock('Pierceur(se) — '+STUDIO, null)}
+    </div>
+    <div style="margin-top:24px;font-size:8pt;color:#aaa;text-align:center;">Document confidentiel — ${STUDIO} · Imprimé le ${new Date().toLocaleDateString('fr-FR')}</div>
+  `;
+  doPrint(html);
+}
+
+// ── Fiche de Soin
+function printSoin(sid){
+  closeModal('modalPrint');
+  const s = DB.soins.find(x=>x.id===sid);
+  if(!s) return;
+  const c = DB.clients.find(x=>x.id===s.clientId);
+  const av = JSON.parse(s.photosAvant||'[]');
+  const ap = JSON.parse(s.photosApres||'[]');
+  const photosHtml = [
+    ...av.map(p=>`<div><div style="font-size:9pt;color:#888;margin-bottom:4px;">AVANT</div><img src="${p}" style="width:120px;height:100px;object-fit:cover;border:1px solid #ddd;border-radius:4px;"></div>`),
+    ...ap.map(p=>`<div><div style="font-size:9pt;color:#888;margin-bottom:4px;">APRÈS</div><img src="${p}" style="width:120px;height:100px;object-fit:cover;border:1px solid #ddd;border-radius:4px;"></div>`)
+  ].join('');
+  const html = `
+    ${printHeader('Fiche de Soins — '+(soinLabels[s.type]||s.type), `Zone : ${s.zone} · ${formatDate(s.date)}`)}
+    ${printSection('Informations client')}
+    ${printTable(
+      printRow('Client', c?`${c.prenom} ${c.nom}`:'—') +
+      printRow('N° Dossier', c?.id||'—') +
+      printRow('Date du soin', formatDate(s.date)) +
+      printRow('Praticien', s.praticien)
+    )}
+    ${printSection('Détail du soin')}
+    ${printTable(
+      printRow('Type de soin', (soinLabels[s.type]||s.type)) +
+      printRow('Localisation', s.zone) +
+      printRow('Type de bijou', s.bijouType||s.bijou||'—') +
+      printRow('Calibre', s.calibre||'—') +
+      printRow('Longueur / Diamètre', s.longueur||'—') +
+      printRow('Matériau', s.materiau) +
+      printRow('Détail bijou', s.bijouDetail||'—') +
+      printRow('Saignement', s.saignement==='non'?'Non':s.saignement==='leger'?'Léger':'Oui') +
+      printRow('Déroulement', s.deroulement) +
+      printRow('Douleur ressentie', s.douleur ? s.douleur+'/5' : '—') +
+      printRow('Morphologie', s.morpho||'—') +
+      printRow('Risque de rejet', s.rejet||'—') +
+      printRow('Conseils remis', s.conseilsRemis==='oui'?'✓ Oui':'Non') +
+      printRow('Observations', s.obs||'—') +
+      printRow('Prochain rendez-vous', formatDate(s.rdv))
+    )}
+    ${photosHtml?`${printSection('Photos avant / après')}<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;">${photosHtml}</div>`:''}
+    ${printSection('Signature client')}
+    <div style="display:flex;gap:12px;margin-top:8px;">
+      ${printSigBlock('Signature du client', s.signature)}
+      ${printSigBlock('Pierceur(se) — '+STUDIO, null)}
+    </div>
+    <div style="margin-top:24px;font-size:8pt;color:#aaa;text-align:center;">Document confidentiel — ${STUDIO} · Imprimé le ${new Date().toLocaleDateString('fr-FR')}</div>
+  `;
+  doPrint(html);
+}
+
+function openJotformEmbed(url, titre){
+  document.getElementById('jotformModalTitle').textContent = titre;
+  document.getElementById('jotformIframe').src = url;
+  document.getElementById('jotformExternalLink').href = url;
+  openModal('modalJotform');
+}
+
+// ══════════════════════════════════════════
+document.querySelectorAll('.modal-overlay').forEach(m=>{
+  m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});
+});
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+loadDB();
+
+// ── Données de démonstration si base vide
+if(DB.clients.length === 0){
+  const demoClients = [
+    {
+      id:'CLI-DEMO01',
+      prenom:'Camille', nom:'Durand',
+      dob:'2007-03-14', genre:'Femme', statut:'mineur',
+      tel:'06 12 34 56 78', email:'camille.durand@mail.fr',
+      adresse:'12 rue des Lilas', cp:'37000', ville:'Tours',
+      urgNom:'Sophie Durand (mère)', urgTel:'06 98 76 54 32',
+      notes:'Première venue. Très motivée pour un piercing hélix. Mère présente.',
+      photos:[], dateCreation:'2026-03-01'
+    },
+    {
+      id:'CLI-DEMO02',
+      prenom:'Lucas', nom:'Martin',
+      dob:'1998-07-22', genre:'Homme', statut:'actif',
+      tel:'07 45 67 89 01', email:'lucas.martin@mail.fr',
+      adresse:'5 avenue Grammont', cp:'37000', ville:'Tours',
+      urgNom:'', urgTel:'',
+      notes:'Client régulier. Plusieurs piercings existants. Pas d\'allergie connue.',
+      photos:[], dateCreation:'2026-02-15'
+    },
+    {
+      id:'CLI-DEMO03',
+      prenom:'Sofia', nom:'Benali',
+      dob:'2005-11-30', genre:'Femme', statut:'mineur',
+      tel:'06 23 45 67 89', email:'',
+      adresse:'8 rue du Commerce', cp:'37100', ville:'Tours',
+      urgNom:'Rachid Benali (père)', urgTel:'06 11 22 33 44',
+      notes:'Allergie latex confirmée. Bijou titane obligatoire.',
+      photos:[], dateCreation:'2026-03-05'
+    }
+  ];
+
+  const demoQuestionnaires = [
+    {
+      id:'Q-DEMO01', clientId:'CLI-DEMO01', type:'mineur',
+      date:'2026-03-01',
+      nom:'Durand', prenom:'Camille', dob:'2007-03-14', age:'18',
+      adresse:'12 rue des Lilas', cpVille:'37000 — Tours',
+      telMineur:'06 12 34 56 78',
+      pieceId:'CNI (Carte Nationale d\'Identité)', numPiece:'FR123456789',
+      zone:'Hélix', bijou:'BCR / Anneau',
+      premier:'non', zonesExist:'Lobe droit (posé il y a 2 ans)',
+      suivi:'non', medecin:'',
+      traitement:'aucun', traitementDetail:'',
+      allergies:['aucune'], autresAllergies:'',
+      cheloides:'non', cheloideZone:'',
+      infos:'RAS. Bonne santé générale.',
+      signature1:'', signature2:'', signaturePierceur:''
+    },
+    {
+      id:'Q-DEMO02', clientId:'CLI-DEMO02', type:'majeur',
+      date:'2026-02-15',
+      nom:'Martin', prenom:'Lucas', dob:'1998-07-22', age:'27',
+      adresse:'5 avenue Grammont', cpVille:'37000 — Tours',
+      telMineur:'07 45 67 89 01',
+      pieceId:'Passeport', numPiece:'FR987654321',
+      zone:'Septum', bijou:'Fer à cheval',
+      premier:'non', zonesExist:'Lobe x2, Hélix gauche, Nombril',
+      suivi:'non', medecin:'',
+      traitement:'aucun', traitementDetail:'',
+      allergies:['aucune'], autresAllergies:'',
+      cheloides:'non', cheloideZone:'',
+      infos:'',
+      signature1:'', signature2:'', signaturePierceur:''
+    },
+    {
+      id:'Q-DEMO03', clientId:'CLI-DEMO03', type:'mineur',
+      date:'2026-03-05',
+      nom:'Benali', prenom:'Sofia', dob:'2005-11-30', age:'20',
+      adresse:'8 rue du Commerce', cpVille:'37100 — Tours',
+      telMineur:'',
+      pieceId:'CNI (Carte Nationale d\'Identité)', numPiece:'FR555666777',
+      zone:'Narine (Nostril)', bijou:'Stud titane',
+      premier:'oui', zonesExist:'',
+      suivi:'non', medecin:'',
+      traitement:'aucun', traitementDetail:'',
+      allergies:['latex'], autresAllergies:'Nickel (réaction cutanée)',
+      cheloides:'non', cheloideZone:'',
+      infos:'Allergie latex CONFIRMÉE. Bijou titane G23 obligatoire. Gants nitrile uniquement.',
+      signature1:'', signature2:'', signaturePierceur:''
+    }
+  ];
+
+  const demoAutorisations = [
+    {
+      id:'A-DEMO01', clientId:'CLI-DEMO01', type:'parentale',
+      date:'2026-03-01',
+      parentNom:'Sophie Durand', lien:'Mère', parentTel:'06 98 76 54 32',
+      zones:['oreilles'], signature:'', photos:[]
+    },
+    {
+      id:'A-DEMO02', clientId:'CLI-DEMO03', type:'parentale',
+      date:'2026-03-05',
+      parentNom:'Rachid Benali', lien:'Père', parentTel:'06 11 22 33 44',
+      zones:['nez'], signature:'', photos:[]
+    },
+    {
+      id:'A-DEMO03', clientId:'CLI-DEMO02', type:'confidentialite',
+      date:'2026-02-15',
+      parentNom:'', lien:'', parentTel:'',
+      zones:[], signature:'signé', photos:[]
+    }
+  ];
+
+  const demoSoins = [
+    {
+      id:'S-DEMO01', clientId:'CLI-DEMO02', type:'nez',
+      zone:'Septum', date:'2026-02-15',
+      praticien:'Marie — Société Intemporelle',
+      bijouType:'Fer à cheval', calibre:'1,6 mm (14G)', longueur:'10mm',
+      materiau:'Titane G23 (ASTM F136)', bijouDetail:'Argenté, boules noires',
+      saignement:'leger', deroulement:'Excellent', douleur:'2',
+      morpho:'oui', rejet:'faible', conseilsRemis:'oui',
+      rdv:'2026-04-15', obs:'Pose parfaite. Client très détendu. Résultat esthétique excellent.',
+      photosAvant:'[]', photosApres:'[]', signature:''
+    },
+    {
+      id:'S-DEMO02', clientId:'CLI-DEMO01', type:'oreilles',
+      zone:'Hélix', date:'2026-03-01',
+      praticien:'Marie — Société Intemporelle',
+      bijouType:'Anneau BCR', calibre:'1,2 mm (16G)', longueur:'8mm',
+      materiau:'Titane G23 (ASTM F136)', bijouDetail:'Doré',
+      saignement:'non', deroulement:'Bon', douleur:'3',
+      morpho:'oui', rejet:'faible', conseilsRemis:'oui',
+      rdv:'2026-04-01', obs:'Première expérience. Légère appréhension mais très bien tolérée.',
+      photosAvant:'[]', photosApres:'[]', signature:''
+    },
+    {
+      id:'S-DEMO03', clientId:'CLI-DEMO03', type:'nez',
+      zone:'Narine (Nostril)', date:'2026-03-05',
+      praticien:'Marie — Société Intemporelle',
+      bijouType:'Labret droit', calibre:'0,8 mm (20G)', longueur:'6mm',
+      materiau:'Titane G23 (ASTM F136)', bijouDetail:'Stud cristal blanc',
+      saignement:'leger', deroulement:'Excellent', douleur:'2',
+      morpho:'oui', rejet:'faible', conseilsRemis:'oui',
+      rdv:'2026-04-05', obs:'Allergie latex — gants nitrile utilisés. RAS. Très bon résultat.',
+      photosAvant:'[]', photosApres:'[]', signature:''
+    }
+  ];
+
+  DB.clients = demoClients;
+  DB.questionnaires = demoQuestionnaires;
+  DB.autorisations = demoAutorisations;
+  DB.soins = demoSoins;
+  saveDB();
+}
+
+updateStats();
+renderDashboard();
+updateZones();
+// FAB masqué sur dashboard (a son propre bouton)
+const fab = document.getElementById('fabBtn');
+if(fab) fab.style.display='none';
+</script>
+</body>
+</html>
